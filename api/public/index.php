@@ -46,7 +46,62 @@ $method = $_SERVER['REQUEST_METHOD'];
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?: '/';
 
 try {
-    if ($method === 'POST' && $path === '/auth/signup') {
+    if ($method === 'GET' && $path === '/') {
+        Response::json([
+            'name' => 'Nexora Auth API',
+            'version' => '1.0.0',
+            'status' => 'running'
+        ]);
+    } elseif ($method === 'GET' && $path === '/favicon.ico') {
+        http_response_code(204);
+        exit;
+    } elseif ($method === 'GET' && $path === '/api-docs') {
+        $generator = new \OpenApi\Generator();
+        $openapi = $generator->generate([__DIR__ . '/../src']);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $openapi->toJson();
+        exit;
+    } elseif ($method === 'GET' && $path === '/swagger') {
+        echo <<<HTML
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="utf-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+          <title>Nexora Auth API - Swagger UI</title>
+          <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css" />
+          <style>
+            html { box-sizing: border-box; overflow: -moz-scrollbars-vertical; overflow-y: scroll; }
+            *, *:before, *:after { box-sizing: inherit; }
+            body { margin: 0; background: #fafafa; }
+          </style>
+        </head>
+        <body>
+          <div id="swagger-ui"></div>
+          <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js" crossorigin></script>
+          <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-standalone-preset.js" crossorigin></script>
+          <script>
+            window.onload = () => {
+              window.ui = SwaggerUIBundle({
+                url: '/api-docs',
+                dom_id: '#swagger-ui',
+                deepLinking: true,
+                presets: [
+                  SwaggerUIBundle.presets.apis,
+                  SwaggerUIStandalonePreset
+                ],
+                plugins: [
+                  SwaggerUIBundle.plugins.DownloadUrl
+                ],
+                layout: "BaseLayout"
+              });
+            };
+          </script>
+        </body>
+        </html>
+        HTML;
+        exit;
+    } elseif ($method === 'POST' && $path === '/auth/signup') {
         $authController->signup();
     } elseif ($method === 'POST' && $path === '/auth/login') {
         $authController->login();
@@ -65,5 +120,21 @@ try {
         Response::error('NOT_FOUND', 'Endpoint não encontrado', [], 404);
     }
 } catch (Throwable $e) {
-    Response::error('UNEXPECTED_ERROR', $e->getMessage(), [], 500);
+    $status = 500;
+    $code = 'UNEXPECTED_ERROR';
+
+    $authErrors = [
+        'Token ausente',
+        'Token inválido',
+        'Token expirado',
+        'Usuário não encontrado',
+        'Credenciais inválidas'
+    ];
+
+    if (in_array($e->getMessage(), $authErrors)) {
+        $status = 401;
+        $code = 'UNAUTHORIZED';
+    }
+
+    Response::error($code, $e->getMessage(), [], $status);
 }
