@@ -120,5 +120,21 @@ try {
         Response::error('NOT_FOUND', 'Endpoint não encontrado', [], 404);
     }
 } catch (Throwable $e) {
-    Response::error('UNEXPECTED_ERROR', $e->getMessage(), [], 500);
+    $status = 500;
+    $code = 'UNEXPECTED_ERROR';
+
+    $authErrors = [
+        'Token ausente',
+        'Token inválido',
+        'Token expirado',
+        'Usuário não encontrado',
+        'Credenciais inválidas'
+    ];
+
+    if (in_array($e->getMessage(), $authErrors)) {
+        $status = 401;
+        $code = 'UNAUTHORIZED';
+    }
+
+    Response::error($code, $e->getMessage(), [], $status);
 }
