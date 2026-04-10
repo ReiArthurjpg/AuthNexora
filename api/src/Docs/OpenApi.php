@@ -131,6 +131,28 @@ use OpenApi\Attributes as OA;
         new OA\Response(response: 400, description: "Token inválido ou expirado")
     ]
 )]
+
+#[OA\Get(
+    path: "/auth/google",
+    tags: ["Auth"],
+    summary: "Retorna a URL de redirecionamento do Google",
+    responses: [
+        new OA\Response(response: 200, description: "URL do Google gerada com sucesso")
+    ]
+)]
+
+#[OA\Get(
+    path: "/auth/google/callback",
+    tags: ["Auth"],
+    summary: "Callback da autenticação Google",
+    parameters: [
+        new OA\Parameter(name: "code", in: "query", required: true, description: "Código retornado pelo Google", schema: new OA\Schema(type: "string"))
+    ],
+    responses: [
+        new OA\Response(response: 200, description: "Autenticação bem sucedida"),
+        new OA\Response(response: 401, description: "Autenticação falhou")
+    ]
+)]
 final class OpenApi
 {
 }
