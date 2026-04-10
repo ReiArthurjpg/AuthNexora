@@ -22,5 +22,5 @@ Para instruções completas de instalação, guias técnicos, arquitetura do ban
 
 ---
 <p align="center">
-  Desenvolvido por <a href="https://github.com/ReiArthurjpg">Arthur</a>
+  Desenvolvido por <a href="https://github.com/ReiArthurjpg">ReiArthurjpg</a>
 </p>
