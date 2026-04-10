@@ -34,4 +34,9 @@ return [
         'rate_limit_max_attempts' => 5,
         'rate_limit_window_seconds' => 60,
     ],
+    'google' => [
+        'client_id' => getenv('GOOGLE_CLIENT_ID') ?: '',
+        'client_secret' => getenv('GOOGLE_CLIENT_SECRET') ?: '',
+        'redirect_uri' => (getenv('APP_BASE_URL') ?: 'http://localhost:8080') . '/auth/google/callback',
+    ],
 ];

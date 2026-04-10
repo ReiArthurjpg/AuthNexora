@@ -21,6 +21,15 @@ final class UserRepository
         return $user ?: null;
     }
 
+    public function findByGoogleId(string $googleId): ?array
+    {
+        $stmt = $this->pdo->prepare('SELECT * FROM users WHERE google_id = :google_id LIMIT 1');
+        $stmt->execute(['google_id' => $googleId]);
+        $user = $stmt->fetch();
+
+        return $user ?: null;
+    }
+
     public function findById(int $id): ?array
     {
         $stmt = $this->pdo->prepare('SELECT id, name, email, is_email_verified FROM users WHERE id = :id LIMIT 1');
@@ -30,13 +39,14 @@ final class UserRepository
         return $user ?: null;
     }
 
-    public function create(string $name, string $email, string $passwordHash): array
+    public function create(string $name, string $email, ?string $passwordHash = null, ?string $googleId = null): array
     {
-        $stmt = $this->pdo->prepare('INSERT INTO users (name, email, password_hash) VALUES (:name, :email, :password_hash)');
+        $stmt = $this->pdo->prepare('INSERT INTO users (name, email, password_hash, google_id) VALUES (:name, :email, :password_hash, :google_id)');
         $stmt->execute([
             'name' => $name,
             'email' => mb_strtolower($email),
             'password_hash' => $passwordHash,
+            'google_id' => $googleId,
         ]);
 
         return [
@@ -44,6 +54,15 @@ final class UserRepository
             'name' => $name,
             'email' => mb_strtolower($email),
         ];
+    }
+
+    public function linkGoogleAccount(int $userId, string $googleId): void
+    {
+        $stmt = $this->pdo->prepare('UPDATE users SET google_id = :google_id WHERE id = :id');
+        $stmt->execute([
+            'id' => $userId,
+            'google_id' => $googleId,
+        ]);
     }
 
     public function updatePassword(int $userId, string $passwordHash): void

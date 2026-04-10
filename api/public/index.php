@@ -15,8 +15,13 @@ use App\Services\EmailService;
 use App\Services\JwtService;
 use App\Services\PasswordResetService;
 use App\Services\RateLimitService;
+use App\Services\GoogleAuthService;
+use App\Controllers\GoogleAuthController;
 
 require_once __DIR__ . '/../vendor/autoload.php';
+
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
+$dotenv->safeLoad();
 
 $env = require __DIR__ . '/../src/Config/env.php';
 
@@ -39,6 +44,11 @@ $authController = new AuthController(new AuthService($userRepo, $jwt), $userRepo
 $passwordController = new PasswordController(
     new PasswordResetService($userRepo, $resetRepo, new EmailService($env['mail']), $env),
     $rateLimit
+);
+$googleAuthController = new GoogleAuthController(
+    new GoogleAuthService($env['google']),
+    $userRepo,
+    $jwt
 );
 $authMiddleware = new AuthMiddleware($jwt);
 
@@ -110,6 +120,10 @@ try {
         $authController->me($claims);
     } elseif ($method === 'POST' && $path === '/auth/logout') {
         $authController->logout();
+    } elseif ($method === 'GET' && $path === '/auth/google') {
+        $googleAuthController->login();
+    } elseif ($method === 'GET' && $path === '/auth/google/callback') {
+        $googleAuthController->callback();
     } elseif ($method === 'POST' && $path === '/auth/forgot-password') {
         $passwordController->forgotPassword();
     } elseif ($method === 'POST' && $path === '/auth/reset-password') {
