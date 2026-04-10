@@ -4,30 +4,30 @@ declare(strict_types=1);
 
 return [
     'app' => [
-        'base_url' => getenv('APP_BASE_URL') ?: 'http://localhost:8080',
-        'frontend_reset_url' => getenv('FRONTEND_RESET_URL') ?: 'http://localhost:3000/reset-password',
+        'base_url' => $_ENV['APP_BASE_URL'] ?? 'http://localhost:8080',
+        'frontend_reset_url' => $_ENV['FRONTEND_RESET_URL'] ?? 'http://localhost:3000/reset-password',
     ],
     'db' => [
-        'host' => getenv('DB_HOST') ?: '127.0.0.1',
-        'port' => getenv('DB_PORT') ?: '3306',
-        'database' => getenv('DB_DATABASE') ?: 'authnexora',
-        'username' => getenv('DB_USERNAME') ?: 'root',
-        'password' => getenv('DB_PASSWORD') ?: '',
+        'host' => $_ENV['DB_HOST'] ?? '127.0.0.1',
+        'port' => $_ENV['DB_PORT'] ?? '3306',
+        'database' => $_ENV['DB_DATABASE'] ?? 'authnexora',
+        'username' => $_ENV['DB_USERNAME'] ?? 'root',
+        'password' => $_ENV['DB_PASSWORD'] ?? '',
         'charset' => 'utf8mb4',
     ],
     'jwt' => [
-        'secret' => getenv('JWT_SECRET') ?: 'change-me',
-        'issuer' => getenv('JWT_ISSUER') ?: 'authnexora-api',
-        'expires_in' => (int) (getenv('JWT_EXPIRES_IN') ?: 3600),
+        'secret' => $_ENV['JWT_SECRET'] ?? 'change-me',
+        'issuer' => $_ENV['JWT_ISSUER'] ?? 'authnexora-api',
+        'expires_in' => (int) ($_ENV['JWT_EXPIRES_IN'] ?? 3600),
     ],
     'mail' => [
-        'host' => 'smtp.gmail.com',
-        'port' => 465,
-        'username' => 'arthurnexora@gmail.com',
-        'password' => 'ufwtqcyhroqbxaxa',
+        'host' => $_ENV['MAIL_HOST'] ?? 'smtp.gmail.com',
+        'port' => (int) ($_ENV['MAIL_PORT'] ?? 465),
+        'username' => $_ENV['MAIL_USERNAME'] ?? '',
+        'password' => $_ENV['MAIL_PASSWORD'] ?? '',
         'encryption' => 'ssl',
-        'from_email' => 'arthurnexora@gmail.com',
-        'from_name' => 'Nexora',
+        'from_email' => $_ENV['MAIL_FROM_EMAIL'] ?? '',
+        'from_name' => $_ENV['MAIL_FROM_NAME'] ?? 'Nexora',
     ],
     'security' => [
         'reset_token_ttl_minutes' => 30,
@@ -35,8 +35,8 @@ return [
         'rate_limit_window_seconds' => 60,
     ],
     'google' => [
-        'client_id' => getenv('GOOGLE_CLIENT_ID') ?: '',
-        'client_secret' => getenv('GOOGLE_CLIENT_SECRET') ?: '',
-        'redirect_uri' => (getenv('APP_BASE_URL') ?: 'http://localhost:8080') . '/auth/google/callback',
+        'client_id' => $_ENV['GOOGLE_CLIENT_ID'] ?? '',
+        'client_secret' => $_ENV['GOOGLE_CLIENT_SECRET'] ?? '',
+        'redirect_uri' => ($_ENV['APP_BASE_URL'] ?? 'http://localhost:8080') . '/auth/google/callback',
     ],
 ];
