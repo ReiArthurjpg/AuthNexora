@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="assets/logo.png" alt="AuthNexora Logo" width="200"/>
-</p>
-
 # AuthNexora
 
 [![PHP Version](https://img.shields.io/badge/php-%3E%3D8.2-777bb4.svg)](https://www.php.net/)
