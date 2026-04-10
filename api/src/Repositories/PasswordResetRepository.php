@@ -15,6 +15,10 @@ final class PasswordResetRepository
 
     public function create(int $userId, string $tokenHash, DateTimeImmutable $expiresAt): void
     {
+        // Invalida tokens anteriores não utilizados para este usuário
+        $deleteStmt = $this->pdo->prepare('DELETE FROM password_resets WHERE user_id = :user_id AND used_at IS NULL');
+        $deleteStmt->execute(['user_id' => $userId]);
+
         $stmt = $this->pdo->prepare(
             'INSERT INTO password_resets (user_id, token_hash, expires_at) VALUES (:user_id, :token_hash, :expires_at)'
         );
