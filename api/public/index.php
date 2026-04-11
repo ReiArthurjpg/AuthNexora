@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+
 use App\Config\Database;
 use App\Controllers\AuthController;
 use App\Controllers\PasswordController;
