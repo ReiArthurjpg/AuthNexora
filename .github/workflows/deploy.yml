@@ -15,7 +15,7 @@ jobs:
       - name: 📥 Clonar repositório
         uses: actions/checkout@v3
         with:
-          fetch-depth: 1
+          fetch-depth: 2
 
       # 2. Configurar PHP
       - name: 🐘 Setup PHP
@@ -32,18 +32,37 @@ jobs:
           key: composer-${{ hashFiles('api/composer.lock') }}
           restore-keys: composer-
 
-      # 4. Instalar dependências
+      # 4. Detectar alteração de dependências (composer.json / composer.lock)
+      - name: 🔎 Detectar mudanças de dependências
+        id: deps
+        run: |
+          if git rev-parse --verify HEAD^ >/dev/null 2>&1; then
+            if git diff --name-only HEAD^ HEAD | grep -E '^api/(composer\.json|composer\.lock)$' >/dev/null; then
+              echo "changed=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "changed=false" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            # Primeiro commit visível no checkout: faz deploy completo por segurança
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # 5. Instalar dependências só quando dependências mudarem
       - name: 📦 Instalar dependências (Composer)
+        if: steps.deps.outputs.changed == 'true'
         working-directory: ./api
         run: composer install --no-dev --optimize-autoloader --prefer-dist --no-interaction --no-progress
 
-      # 5. Criar arquivo .env a partir do Secret
+      # 6. Criar arquivo .env a partir do Secret
       - name: 🔐 Criar arquivo .env
         working-directory: ./api
         run: echo "${{ secrets.ENV_FILE }}" > .env
 
       # 6. Deploy via FTP (com vendor)
       - name: 🚀 Deploy via FTP
+      # 7A. Deploy completo (inclui vendor) quando dependências mudam
+      - name: 🚀 Deploy via FTP (com vendor)
+        if: steps.deps.outputs.changed == 'true'
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ${{ secrets.FTP_SERVER }}
