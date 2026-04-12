@@ -34,24 +34,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-$pdo = Database::connection();
-$userRepo = new UserRepository($pdo);
-$resetRepo = new PasswordResetRepository($pdo);
-$jwt = new JwtService($env['jwt']['secret'], $env['jwt']['issuer'], $env['jwt']['expires_in']);
-$rateLimit = new RateLimitService($env['security']['rate_limit_max_attempts'], $env['security']['rate_limit_window_seconds']);
-
-$authController = new AuthController(new AuthService($userRepo, $jwt), $userRepo, $rateLimit);
-$passwordController = new PasswordController(
-    new PasswordResetService($userRepo, $resetRepo, new EmailService($env['mail']), $env),
-    $rateLimit
-);
-$googleAuthController = new GoogleAuthController(
-    new GoogleAuthService($env['google']),
-    $userRepo,
-    $jwt
-);
-$authMiddleware = new AuthMiddleware($jwt);
-
 $method = $_SERVER['REQUEST_METHOD'];
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?: '/';
 
@@ -111,7 +93,28 @@ try {
         </html>
         HTML;
         exit;
-    } elseif ($method === 'POST' && $path === '/auth/signup') {
+    }
+    
+    // Bootstrapping para rotas que precisam de banco e dependências
+    $pdo = Database::connection();
+    $userRepo = new UserRepository($pdo);
+    $resetRepo = new PasswordResetRepository($pdo);
+    $jwt = new JwtService($env['jwt']['secret'], $env['jwt']['issuer'], $env['jwt']['expires_in']);
+    $rateLimit = new RateLimitService($env['security']['rate_limit_max_attempts'], $env['security']['rate_limit_window_seconds']);
+    
+    $authController = new AuthController(new AuthService($userRepo, $jwt), $userRepo, $rateLimit);
+    $passwordController = new PasswordController(
+        new PasswordResetService($userRepo, $resetRepo, new EmailService($env['mail']), $env),
+        $rateLimit
+    );
+    $googleAuthController = new GoogleAuthController(
+        new GoogleAuthService($env['google']),
+        $userRepo,
+        $jwt
+    );
+    $authMiddleware = new AuthMiddleware($jwt);
+
+    if ($method === 'POST' && $path === '/auth/signup') {
         $authController->signup();
     } elseif ($method === 'POST' && $path === '/auth/login') {
         $authController->login();
@@ -150,5 +153,5 @@ try {
         $code = 'UNAUTHORIZED';
     }
 
-    Response::error($code, $e->getMessage(), [], $status);
+    Response::error($code, $e->getMessage() . ' no arquivo ' . $e->getFile() . ' linha ' . $e->getLine(), [], $status);
 }
