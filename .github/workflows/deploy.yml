@@ -1,0 +1,52 @@
+name: 🚀 Build & Deploy PHP API
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  build-and-deploy:
+    name: 🛠️ Build + 📤 Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Clonar repositório
+      - name: 📥 Clonar repositório
+        uses: actions/checkout@v3
+
+      # 2. Configurar PHP
+      - name: 🐘 Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.2
+
+      # 3. Cache do Composer (deixa MUITO mais rápido)
+      - name: ⚡ Cache Composer
+        uses: actions/cache@v3
+        with:
+          path: ~/.composer/cache
+          key: composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: composer-
+
+      # 4. Instalar dependências
+      - name: 📦 Instalar dependências (Composer)
+        run: composer install --no-dev --optimize-autoloader
+
+      # 5. Criar arquivo .env a partir do Secret
+      - name: 🔐 Criar arquivo .env
+        run: echo "${{ secrets.ENV_FILE }}" > .env
+
+      # 6. Deploy via FTP
+      - name: 🚀 Deploy via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./
+          server-dir: /htdocs/
+          exclude: |
+            **/.git*
+            **/.github*
+            **/node_modules/**
