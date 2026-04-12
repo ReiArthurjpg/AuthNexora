@@ -42,7 +42,7 @@ jobs:
         working-directory: ./api
         run: echo "${{ secrets.ENV_FILE }}" > .env
 
-      # 6. Deploy via FTP
+      # 6. Deploy via FTP (com vendor)
       - name: 🚀 Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
@@ -51,9 +51,12 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./api/
           server-dir: /htdocs/
-          dangerous-clean-slate: true
+          # Evita apagar tudo no servidor e reduz tempo de deploy
+          dangerous-clean-slate: false
           exclude: |
             **/.git*
             **/.github*
             **/node_modules/**
             **/.well-known/**
+            **/.env
+            **/.ftp-deploy-sync-state.json
