@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Config\Database;
 use App\Controllers\AuthController;
+use App\Controllers\GoogleAuthController;
 use App\Controllers\PasswordController;
 use App\Helpers\Request;
 use App\Helpers\Response;
@@ -12,11 +13,10 @@ use App\Repositories\PasswordResetRepository;
 use App\Repositories\UserRepository;
 use App\Services\AuthService;
 use App\Services\EmailService;
+use App\Services\GoogleAuthService;
 use App\Services\JwtService;
 use App\Services\PasswordResetService;
 use App\Services\RateLimitService;
-use App\Services\GoogleAuthService;
-use App\Controllers\GoogleAuthController;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
@@ -37,6 +37,86 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 $method = $_SERVER['REQUEST_METHOD'];
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?: '/';
 
+$authErrors = [
+    'Token ausente',
+    'Token inválido',
+    'Token expirado',
+    'Usuário não encontrado',
+    'Credenciais inválidas'
+];
+
+/**
+ * Resolve dependências somente quando necessário para reduzir o custo de bootstrap.
+ *
+ * @return array<string,mixed>
+ */
+$container = (function () use ($env): array {
+    $instances = [];
+
+    return [
+        'env' => $env,
+        'getPdo' => static function () use (&$instances) {
+            return $instances['pdo'] ??= Database::connection();
+        },
+        'getUserRepo' => static function () use (&$instances) {
+            $pdo = $instances['pdo'] ??= Database::connection();
+            return $instances['userRepo'] ??= new UserRepository($pdo);
+        },
+        'getResetRepo' => static function () use (&$instances) {
+            $pdo = $instances['pdo'] ??= Database::connection();
+            return $instances['resetRepo'] ??= new PasswordResetRepository($pdo);
+        },
+        'getJwt' => static function () use (&$instances, $env) {
+            return $instances['jwt'] ??= new JwtService(
+                $env['jwt']['secret'],
+                $env['jwt']['issuer'],
+                $env['jwt']['expires_in']
+            );
+        },
+        'getRateLimit' => static function () use (&$instances, $env) {
+            return $instances['rateLimit'] ??= new RateLimitService(
+                $env['security']['rate_limit_max_attempts'],
+                $env['security']['rate_limit_window_seconds']
+            );
+        },
+        'getAuthController' => static function () use (&$instances, &$container) {
+            $userRepo = $container['getUserRepo']();
+            $jwt = $container['getJwt']();
+            $rateLimit = $container['getRateLimit']();
+
+            return $instances['authController'] ??= new AuthController(
+                new AuthService($userRepo, $jwt),
+                $userRepo,
+                $rateLimit
+            );
+        },
+        'getPasswordController' => static function () use (&$instances, &$container, $env) {
+            $userRepo = $container['getUserRepo']();
+            $resetRepo = $container['getResetRepo']();
+            $rateLimit = $container['getRateLimit']();
+
+            return $instances['passwordController'] ??= new PasswordController(
+                new PasswordResetService($userRepo, $resetRepo, new EmailService($env['mail']), $env),
+                $rateLimit
+            );
+        },
+        'getGoogleController' => static function () use (&$instances, &$container, $env) {
+            $userRepo = $container['getUserRepo']();
+            $jwt = $container['getJwt']();
+
+            return $instances['googleController'] ??= new GoogleAuthController(
+                new GoogleAuthService($env['google']),
+                $userRepo,
+                $jwt
+            );
+        },
+        'getAuthMiddleware' => static function () use (&$instances, &$container) {
+            $jwt = $container['getJwt']();
+            return $instances['authMiddleware'] ??= new AuthMiddleware($jwt);
+        },
+    ];
+})();
+
 try {
     if ($method === 'GET' && $path === '/') {
         Response::json([
@@ -44,16 +124,22 @@ try {
             'version' => '1.0.0',
             'status' => 'running'
         ]);
-    } elseif ($method === 'GET' && $path === '/favicon.ico') {
+    }
+
+    if ($method === 'GET' && $path === '/favicon.ico') {
         http_response_code(204);
         exit;
-    } elseif ($method === 'GET' && $path === '/api-docs') {
+    }
+
+    if ($method === 'GET' && $path === '/api-docs') {
         $generator = new \OpenApi\Generator();
         $openapi = $generator->generate([__DIR__ . '/../src']);
         header('Content-Type: application/json; charset=utf-8');
         echo $openapi->toJson();
         exit;
-    } elseif ($method === 'GET' && $path === '/swagger') {
+    }
+
+    if ($method === 'GET' && $path === '/swagger') {
         echo <<<HTML
         <!DOCTYPE html>
         <html lang="en">
@@ -94,45 +180,26 @@ try {
         HTML;
         exit;
     }
-    
-    // Bootstrapping para rotas que precisam de banco e dependências
-    $pdo = Database::connection();
-    $userRepo = new UserRepository($pdo);
-    $resetRepo = new PasswordResetRepository($pdo);
-    $jwt = new JwtService($env['jwt']['secret'], $env['jwt']['issuer'], $env['jwt']['expires_in']);
-    $rateLimit = new RateLimitService($env['security']['rate_limit_max_attempts'], $env['security']['rate_limit_window_seconds']);
-    
-    $authController = new AuthController(new AuthService($userRepo, $jwt), $userRepo, $rateLimit);
-    $passwordController = new PasswordController(
-        new PasswordResetService($userRepo, $resetRepo, new EmailService($env['mail']), $env),
-        $rateLimit
-    );
-    $googleAuthController = new GoogleAuthController(
-        new GoogleAuthService($env['google']),
-        $userRepo,
-        $jwt
-    );
-    $authMiddleware = new AuthMiddleware($jwt);
 
     if ($method === 'POST' && $path === '/auth/signup') {
-        $authController->signup();
+        $container['getAuthController']()->signup();
     } elseif ($method === 'POST' && $path === '/auth/login') {
-        $authController->login();
+        $container['getAuthController']()->login();
     } elseif ($method === 'GET' && $path === '/auth/me') {
-        $claims = $authMiddleware->authenticate(Request::bearerToken());
-        $authController->me($claims);
+        $claims = $container['getAuthMiddleware']()->authenticate(Request::bearerToken());
+        $container['getAuthController']()->me($claims);
     } elseif ($method === 'POST' && $path === '/auth/logout') {
-        $authController->logout();
+        $container['getAuthController']()->logout();
     } elseif ($method === 'GET' && $path === '/auth/google') {
-        $googleAuthController->login();
+        $container['getGoogleController']()->login();
     } elseif ($method === 'GET' && $path === '/auth/google/callback') {
-        $googleAuthController->callback();
+        $container['getGoogleController']()->callback();
     } elseif ($method === 'POST' && $path === '/auth/forgot-password') {
-        $passwordController->forgotPassword();
+        $container['getPasswordController']()->forgotPassword();
     } elseif ($method === 'POST' && $path === '/auth/reset-password') {
-        $passwordController->resetPassword();
+        $container['getPasswordController']()->resetPassword();
     } elseif ($method === 'GET' && $path === '/auth/reset-password/validate') {
-        $passwordController->validateResetToken();
+        $container['getPasswordController']()->validateResetToken();
     } else {
         Response::error('NOT_FOUND', 'Endpoint não encontrado', [], 404);
     }
@@ -140,15 +207,7 @@ try {
     $status = 500;
     $code = 'UNEXPECTED_ERROR';
 
-    $authErrors = [
-        'Token ausente',
-        'Token inválido',
-        'Token expirado',
-        'Usuário não encontrado',
-        'Credenciais inválidas'
-    ];
-
-    if (in_array($e->getMessage(), $authErrors)) {
+    if (in_array($e->getMessage(), $authErrors, true)) {
         $status = 401;
         $code = 'UNAUTHORIZED';
     }
