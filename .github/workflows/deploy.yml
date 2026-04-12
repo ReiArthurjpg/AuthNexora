@@ -70,32 +70,6 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./api/
           server-dir: /htdocs/
-          # Mantém deploy incremental (evita apagar tudo e reenviar milhares de arquivos a cada push)
-          dangerous-clean-slate: false
-          exclude: |
-            **/.git*
-            **/.github*
-            **/node_modules/**
-            **/.well-known/**
-            **/.env
-            **/.ftp-deploy-sync-state.json
-
-      # 7B. Deploy rápido (sem vendor) para mudanças comuns de código
-      - name: 🚀 Deploy via FTP (sem vendor)
-        if: steps.deps.outputs.changed == 'false'
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./api/
-          server-dir: /htdocs/
           # Evita apagar tudo no servidor e reduz tempo de deploy
           dangerous-clean-slate: false
-          exclude: |
-            .git*
-            .github*
-            node_modules/**
-            .well-known/**
-            .env
-            .ftp-deploy-sync-state.json
+          exclude: ".git*\n.github*\nnode_modules/**\n.well-known/**\n.env\n.ftp-deploy-sync-state.json"
