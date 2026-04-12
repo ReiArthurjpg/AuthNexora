@@ -1,0 +1,14 @@
+DirectoryIndex index.php
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Deixa arquivos e pastas reais seguirem normalmente
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Encaminha todas as rotas da API para o front controller
+  RewriteRule ^ index.php [L,QSA]
+</IfModule>
