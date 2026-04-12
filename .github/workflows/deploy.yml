@@ -14,12 +14,15 @@ jobs:
       # 1. Clonar repositório
       - name: 📥 Clonar repositório
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
 
       # 2. Configurar PHP
       - name: 🐘 Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: 8.2
+          tools: composer:v2
 
       # 3. Cache do Composer (deixa MUITO mais rápido)
       - name: ⚡ Cache Composer
@@ -32,7 +35,7 @@ jobs:
       # 4. Instalar dependências
       - name: 📦 Instalar dependências (Composer)
         working-directory: ./api
-        run: composer install --no-dev --optimize-autoloader
+        run: composer install --no-dev --optimize-autoloader --prefer-dist --no-interaction --no-progress
 
       # 5. Criar arquivo .env a partir do Secret
       - name: 🔐 Criar arquivo .env
@@ -46,9 +49,11 @@ jobs:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./
-          server-dir: /htdocs/
+          local-dir: ./api/
+          server-dir: /htdocs/nexorabjj.42web.io/
+          dangerous-clean-slate: true
           exclude: |
             **/.git*
             **/.github*
             **/node_modules/**
+            **/.well-known/**
