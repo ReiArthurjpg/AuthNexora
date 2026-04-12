@@ -51,9 +51,12 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./api/
           server-dir: /htdocs/
-          dangerous-clean-slate: true
+          # Mantém deploy incremental (evita apagar tudo e reenviar milhares de arquivos a cada push)
+          dangerous-clean-slate: false
           exclude: |
             **/.git*
             **/.github*
             **/node_modules/**
             **/.well-known/**
+            **/.env
+            **/.ftp-deploy-sync-state.json
