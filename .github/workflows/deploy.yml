@@ -58,6 +58,8 @@ jobs:
         working-directory: ./api
         run: echo "${{ secrets.ENV_FILE }}" > .env
 
+      # 6. Deploy via FTP (com vendor)
+      - name: 🚀 Deploy via FTP
       # 7A. Deploy completo (inclui vendor) quando dependências mudam
       - name: 🚀 Deploy via FTP (com vendor)
         if: steps.deps.outputs.changed == 'true'
@@ -88,6 +90,7 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./api/
           server-dir: /htdocs/
+          # Evita apagar tudo no servidor e reduz tempo de deploy
           dangerous-clean-slate: false
           exclude: |
             **/.git*
@@ -96,4 +99,3 @@ jobs:
             **/.well-known/**
             **/.env
             **/.ftp-deploy-sync-state.json
-            **/vendor/**
