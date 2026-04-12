@@ -51,7 +51,9 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./api/
           server-dir: /htdocs/
+          dangerous-clean-slate: true
           exclude: |
             **/.git*
             **/.github*
             **/node_modules/**
+            **/.well-known/**
