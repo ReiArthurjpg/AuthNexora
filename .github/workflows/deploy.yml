@@ -26,15 +26,17 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.composer/cache
-          key: composer-${{ hashFiles('**/composer.lock') }}
+          key: composer-${{ hashFiles('api/composer.lock') }}
           restore-keys: composer-
 
       # 4. Instalar dependências
       - name: 📦 Instalar dependências (Composer)
+        working-directory: ./api
         run: composer install --no-dev --optimize-autoloader
 
       # 5. Criar arquivo .env a partir do Secret
       - name: 🔐 Criar arquivo .env
+        working-directory: ./api
         run: echo "${{ secrets.ENV_FILE }}" > .env
 
       # 6. Deploy via FTP
