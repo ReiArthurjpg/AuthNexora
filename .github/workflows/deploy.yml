@@ -93,9 +93,9 @@ jobs:
           # Evita apagar tudo no servidor e reduz tempo de deploy
           dangerous-clean-slate: false
           exclude: |
-            **/.git*
-            **/.github*
-            **/node_modules/**
-            **/.well-known/**
-            **/.env
-            **/.ftp-deploy-sync-state.json
+            .git*
+            .github*
+            node_modules/**
+            .well-known/**
+            .env
+            .ftp-deploy-sync-state.json
