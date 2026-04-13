@@ -24,4 +24,3 @@ jobs:
           exclude: |
             **/.git*
             **/.git*/**
-            .env
