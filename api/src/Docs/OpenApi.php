@@ -7,6 +7,7 @@ namespace App\Docs;
 use OpenApi\Attributes as OA;
 
 #[OA\Info(title: "Auth API", version: "1.0.0", description: "API de autenticação em PHP/MySQL")]
+#[OA\Server(url: "http://nexoraauth.free.nf", description: "Production (InfinityFree)")]
 #[OA\Server(url: "http://localhost:8080", description: "Local (Port 8080)")]
 #[OA\Server(url: "http://localhost:8081", description: "Local (Port 8081)")]
 #[OA\Tag(name: "Auth", description: "Fluxo de autenticação")]
