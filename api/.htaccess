@@ -1,0 +1,11 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # Redireciona a raiz para public/index.php
+    RewriteRule ^$ public/index.php [L]
+    
+    # Se o arquivo ou diretório solicitado não existir, manda para o public/index.php
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ public/index.php/$1 [L]
+</IfModule>
