@@ -10,9 +10,9 @@ final class RateLimitService
 
     public function __construct(private readonly int $maxAttempts, private readonly int $windowSeconds)
     {
-        $this->storage = sys_get_temp_dir() . '/authnexora_rate_limit';
+        $this->storage = __DIR__ . '/../../storage/rate_limit';
         if (!is_dir($this->storage)) {
-            mkdir($this->storage, 0777, true);
+            @mkdir($this->storage, 0777, true);
         }
     }
 
