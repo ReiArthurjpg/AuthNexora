@@ -19,10 +19,11 @@ use OpenApi\Attributes as OA;
     requestBody: new OA\RequestBody(
         required: true,
         content: new OA\JsonContent(
-            required: ["name", "email", "password", "confirmPassword"],
+            required: ["name", "email", "academyName", "password", "confirmPassword"],
             properties: [
                 new OA\Property(property: "name", type: "string", example: "Maria Silva"),
                 new OA\Property(property: "email", type: "string", format: "email", example: "maria@email.com"),
+                new OA\Property(property: "academyName", type: "string", example: "Gracie Barra"),
                 new OA\Property(property: "password", type: "string", format: "password", example: "SenhaForte@123"),
                 new OA\Property(property: "confirmPassword", type: "string", format: "password", example: "SenhaForte@123")
             ]
