@@ -48,7 +48,8 @@ $passwordController = new PasswordController(
 $googleAuthController = new GoogleAuthController(
     new GoogleAuthService($env['google']),
     $userRepo,
-    $jwt
+    $jwt,
+    $env
 );
 $authMiddleware = new AuthMiddleware($jwt);
 

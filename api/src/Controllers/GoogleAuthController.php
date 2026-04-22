@@ -16,7 +16,8 @@ final class GoogleAuthController
     public function __construct(
         private readonly GoogleAuthService $googleAuth,
         private readonly UserRepository $users,
-        private readonly JwtService $jwt
+        private readonly JwtService $jwt,
+        private readonly array $config
     ) {
     }
 
@@ -62,19 +63,15 @@ final class GoogleAuthController
             // Gera o token JWT
             $token = $this->jwt->issueToken(['user_id' => (int) $user['id']]);
 
-            Response::json([
-                'accessToken' => $token,
-                'tokenType' => 'Bearer',
-                'expiresIn' => 3600,
-                'user' => [
-                    'id' => (int) $user['id'],
-                    'name' => $user['name'],
-                    'email' => $user['email'],
-                ],
-            ]);
+            // Redireciona para o frontend
+            $baseUrl = $this->config['app']['frontend_url'];
+            header('Location: ' . $baseUrl . '/auth/callback?token=' . $token);
+            exit;
 
         } catch (Exception $e) {
-            Response::error('AUTH_FAILED', $e->getMessage(), [], 401);
+            $baseUrl = $this->config['app']['frontend_url'];
+            header('Location: ' . $baseUrl . '/login?error=google_auth_failed&message=' . urlencode($e->getMessage()));
+            exit;
         }
     }
 }
