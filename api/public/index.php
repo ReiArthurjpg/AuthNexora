@@ -118,6 +118,9 @@ try {
     } elseif ($method === 'GET' && $path === '/auth/me') {
         $claims = $authMiddleware->authenticate(Request::bearerToken());
         $authController->me($claims);
+    } elseif ($method === 'PUT' && $path === '/auth/me') {
+        $claims = $authMiddleware->authenticate(Request::bearerToken());
+        $authController->updateProfile($claims);
     } elseif ($method === 'POST' && $path === '/auth/logout') {
         $authController->logout();
     } elseif ($method === 'GET' && $path === '/auth/google') {
