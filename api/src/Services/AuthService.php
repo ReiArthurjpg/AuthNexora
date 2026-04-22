@@ -14,10 +14,10 @@ final class AuthService
     ) {
     }
 
-    public function signup(string $name, string $email, string $password): array
+    public function signup(string $name, string $email, string $password, ?string $academyName = null): array
     {
         $hash = password_hash($password, PASSWORD_ARGON2ID);
-        return $this->users->create($name, $email, $hash);
+        return $this->users->create($name, $email, $hash, null, $academyName);
     }
 
     public function login(string $email, string $password): ?array

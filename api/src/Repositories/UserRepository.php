@@ -39,14 +39,15 @@ final class UserRepository
         return $user ?: null;
     }
 
-    public function create(string $name, string $email, ?string $passwordHash = null, ?string $googleId = null): array
+    public function create(string $name, string $email, ?string $passwordHash = null, ?string $googleId = null, ?string $academyName = null): array
     {
-        $stmt = $this->pdo->prepare('INSERT INTO users (name, email, password_hash, google_id) VALUES (:name, :email, :password_hash, :google_id)');
+        $stmt = $this->pdo->prepare('INSERT INTO users (name, email, password_hash, google_id, academy_name) VALUES (:name, :email, :password_hash, :google_id, :academy_name)');
         $stmt->execute([
             'name' => $name,
             'email' => mb_strtolower($email),
             'password_hash' => $passwordHash,
             'google_id' => $googleId,
+            'academy_name' => $academyName,
         ]);
 
         return [
