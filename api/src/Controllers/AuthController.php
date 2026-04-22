@@ -35,7 +35,7 @@ final class AuthController
             return;
         }
 
-        $user = $this->auth->signup($body['name'], $body['email'], $body['password'], $body['academyName'] ?? null);
+        $user = $this->auth->signup($body);
         Response::json(['message' => 'Usuário criado com sucesso', 'user' => $user], 201);
     }
 
@@ -85,6 +85,22 @@ final class AuthController
         Response::json(['message' => 'Logout realizado com sucesso']);
     }
 
+    public function updateProfile(array $claims): void
+    {
+        $userId = (int) ($claims['sub'] ?? 0);
+        $body = Request::jsonBody();
+
+        if (empty($body['name'])) {
+            Response::error('VALIDATION_ERROR', 'Nome é obrigatório', ['name' => ['Nome é obrigatório']], 422);
+            return;
+        }
+
+        $this->users->update($userId, $body);
+        $updatedUser = $this->users->findById($userId);
+
+        Response::json(['message' => 'Perfil atualizado com sucesso', 'user' => $updatedUser]);
+    }
+
     private function validateSignup(array $body): array
     {
         $errors = [];
@@ -104,6 +120,9 @@ final class AuthController
         if (($body['password'] ?? null) !== ($body['confirmPassword'] ?? null)) {
             $errors['confirmPassword'][] = 'As senhas não coincidem';
         }
+
+        // Novos campos (opcionais na validação básica, mas aceitos)
+        // Você pode adicionar regras específicas aqui se desejar (ex: validar formato de CPF)
 
         return $errors;
     }

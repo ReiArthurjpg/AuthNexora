@@ -14,10 +14,10 @@ final class AuthService
     ) {
     }
 
-    public function signup(string $name, string $email, string $password, ?string $academyName = null): array
+    public function signup(array $data): array
     {
-        $hash = password_hash($password, PASSWORD_ARGON2ID);
-        return $this->users->create($name, $email, $hash, null, $academyName);
+        $data['password_hash'] = password_hash($data['password'], PASSWORD_ARGON2ID);
+        return $this->users->create($data);
     }
 
     public function login(string $email, string $password): ?array
@@ -37,6 +37,15 @@ final class AuthService
                 'id' => (int) $user['id'],
                 'name' => $user['name'],
                 'email' => $user['email'],
+                'phone' => $user['phone'] ?? null,
+                'birth_date' => $user['birth_date'] ?? null,
+                'gender' => $user['gender'] ?? null,
+                'cpf' => $user['cpf'] ?? null,
+                'address' => $user['address'] ?? null,
+                'belt' => $user['belt'] ?? null,
+                'degree' => $user['degree'] ?? null,
+                'last_graduation' => $user['last_graduation'] ?? null,
+                'academy_name' => $user['academy_name'] ?? null,
             ],
         ];
     }

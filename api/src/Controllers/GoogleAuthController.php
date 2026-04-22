@@ -51,12 +51,12 @@ final class GoogleAuthController
                     $this->users->linkGoogleAccount((int) $user['id'], $googleUser['google_id']);
                 } else {
                     // 3. Cria novo usuário
-                    $user = $this->users->create(
-                        $googleUser['name'],
-                        $googleUser['email'],
-                        null, // Sem senha inicial
-                        $googleUser['google_id']
-                    );
+                    $user = $this->users->create([
+                        'name' => $googleUser['name'],
+                        'email' => $googleUser['email'],
+                        'password_hash' => null, // Sem senha inicial
+                        'google_id' => $googleUser['google_id']
+                    ]);
                 }
             }
 
