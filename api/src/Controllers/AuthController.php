@@ -111,8 +111,8 @@ final class AuthController
         if (empty($body['email']) || !filter_var($body['email'], FILTER_VALIDATE_EMAIL)) {
             $errors['email'][] = 'E-mail profissional inválido';
         }
-        if (empty($body['academyName']) || mb_strlen((string) $body['academyName']) < 2) {
-            $errors['academyName'][] = 'Nome da academia deve ter ao menos 2 caracteres';
+        if (empty($body['academy_name']) || mb_strlen((string) $body['academy_name']) < 2) {
+            $errors['academy_name'][] = 'Nome da academia deve ter ao menos 2 caracteres';
         }
         if (empty($body['password']) || !preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{8,}$/', $body['password'])) {
             $errors['password'][] = 'Senha deve conter 8+ caracteres, maiúscula, minúscula, número e símbolo';
