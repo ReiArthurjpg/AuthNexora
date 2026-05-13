@@ -1,7 +1,13 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
-    # Permite que requisições OPTIONS passem para o PHP (necessário para CORS preflight)
+    # Tenta forçar CORS via Header (se o host permitir)
+    Header set Access-Control-Allow-Origin "https://v0-app-nexora-bjj.vercel.app"
+    Header set Access-Control-Allow-Methods "GET, POST, OPTIONS, PUT, DELETE"
+    Header set Access-Control-Allow-Headers "Content-Type, Authorization"
+    Header set Access-Control-Allow-Credentials "true"
+
+    # Permite que requisições OPTIONS passem para o PHP
     RewriteCond %{REQUEST_METHOD} OPTIONS
     RewriteRule ^(.*)$ public/index.php [L,QSA]
 
