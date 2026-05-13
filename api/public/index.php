@@ -29,11 +29,13 @@ $dotenv->safeLoad();
 $env = require __DIR__ . '/../src/Config/env.php';
 
 $requestOrigin = $_SERVER['HTTP_ORIGIN'] ?? '';
-$allowedOrigins = $env['app']['cors_allowed_origins'] ?? [];
 
-if ($requestOrigin !== '' && in_array($requestOrigin, $allowedOrigins, true)) {
-    header("Access-Control-Allow-Origin: {$requestOrigin}");
-    header('Vary: Origin');
+// Permite localhost e domínios .vercel.app
+if ($requestOrigin !== '') {
+    if (preg_match('/^https?:\/\/(localhost|.*\.vercel\.app)(:\d+)?$/', $requestOrigin)) {
+        header("Access-Control-Allow-Origin: {$requestOrigin}");
+        header('Vary: Origin');
+    }
 }
 
 header('Access-Control-Allow-Methods: GET,POST,PUT,OPTIONS');
