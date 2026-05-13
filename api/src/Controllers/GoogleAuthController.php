@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+
 namespace App\Controllers;
 
 use App\Helpers\Request;
@@ -24,7 +25,8 @@ final class GoogleAuthController
     public function login(): void
     {
         $url = $this->googleAuth->getAuthUrl();
-        Response::json(['url' => $url]);
+        header('Location: ' . $url, true, 302);
+        exit;
     }
 
     public function callback(): void

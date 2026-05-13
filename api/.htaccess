@@ -1,11 +1,15 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    
+
+    # Permite que requisições OPTIONS passem para o PHP (necessário para CORS preflight)
+    RewriteCond %{REQUEST_METHOD} OPTIONS
+    RewriteRule ^(.*)$ public/index.php [L,QSA]
+
     # Redireciona a raiz para public/index.php
     RewriteRule ^$ public/index.php [L]
-    
+
     # Se o arquivo ou diretório solicitado não existir, manda para o public/index.php
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^(.*)$ public/index.php/$1 [L]
+    RewriteRule ^(.*)$ public/index.php/$1 [L,QSA]
 </IfModule>
