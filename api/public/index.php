@@ -28,7 +28,14 @@ $dotenv->safeLoad();
 
 $env = require __DIR__ . '/../src/Config/env.php';
 
-header('Access-Control-Allow-Origin: http://localhost:3000');
+$requestOrigin = $_SERVER['HTTP_ORIGIN'] ?? '';
+$allowedOrigins = $env['app']['cors_allowed_origins'] ?? [];
+
+if ($requestOrigin !== '' && in_array($requestOrigin, $allowedOrigins, true)) {
+    header("Access-Control-Allow-Origin: {$requestOrigin}");
+    header('Vary: Origin');
+}
+
 header('Access-Control-Allow-Methods: GET,POST,PUT,OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
