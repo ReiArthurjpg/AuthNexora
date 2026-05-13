@@ -28,9 +28,19 @@ $dotenv->safeLoad();
 
 $env = require __DIR__ . '/../src/Config/env.php';
 
-header('Access-Control-Allow-Origin: http://localhost:3000');
+$allowedOrigins = array_filter(array_map('trim', explode(',', $_ENV['ALLOWED_ORIGINS'] ?? 'http://localhost:3000')));
+$requestOrigin = $_SERVER['HTTP_ORIGIN'] ?? '';
+
+if (in_array($requestOrigin, $allowedOrigins, true)) {
+    header('Access-Control-Allow-Origin: ' . $requestOrigin);
+    header('Vary: Origin');
+} elseif (empty($requestOrigin) && count($allowedOrigins) > 0) {
+    header('Access-Control-Allow-Origin: ' . $allowedOrigins[0]);
+}
+
 header('Access-Control-Allow-Methods: GET,POST,PUT,OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
+header('Access-Control-Allow-Credentials: true');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(204);
