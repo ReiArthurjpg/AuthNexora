@@ -28,14 +28,12 @@ $dotenv->safeLoad();
 
 $env = require __DIR__ . '/../src/Config/env.php';
 
-$allowedOrigins = array_filter(array_map('trim', explode(',', $_ENV['ALLOWED_ORIGINS'] ?? 'http://localhost:3000')));
 $requestOrigin = $_SERVER['HTTP_ORIGIN'] ?? '';
+$allowedOrigins = $env['app']['cors_allowed_origins'] ?? [];
 
-if (in_array($requestOrigin, $allowedOrigins, true)) {
-    header('Access-Control-Allow-Origin: ' . $requestOrigin);
+if ($requestOrigin !== '' && in_array($requestOrigin, $allowedOrigins, true)) {
+    header("Access-Control-Allow-Origin: {$requestOrigin}");
     header('Vary: Origin');
-} elseif (empty($requestOrigin) && count($allowedOrigins) > 0) {
-    header('Access-Control-Allow-Origin: ' . $allowedOrigins[0]);
 }
 
 header('Access-Control-Allow-Methods: GET,POST,PUT,OPTIONS');
