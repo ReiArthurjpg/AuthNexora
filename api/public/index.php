@@ -1,5 +1,4 @@
 <?php
-
 declare(strict_types=1);
 
 ini_set('display_errors', '1');
@@ -29,9 +28,8 @@ $dotenv->safeLoad();
 
 $env = require __DIR__ . '/../src/Config/env.php';
 
-$origin = $_SERVER['HTTP_ORIGIN'] ?? '*';
-header("Access-Control-Allow-Origin: $origin");
-header('Access-Control-Allow-Methods: GET,POST,OPTIONS');
+header('Access-Control-Allow-Origin: http://localhost:3000');
+header('Access-Control-Allow-Methods: GET,POST,PUT,OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -53,7 +51,8 @@ $passwordController = new PasswordController(
 $googleAuthController = new GoogleAuthController(
     new GoogleAuthService($env['google']),
     $userRepo,
-    $jwt
+    $jwt,
+    $env
 );
 $authMiddleware = new AuthMiddleware($jwt);
 
@@ -136,6 +135,9 @@ try {
     } elseif ($method === 'GET' && $path === '/auth/me') {
         $claims = $authMiddleware->authenticate(Request::bearerToken());
         $authController->me($claims);
+    } elseif ($method === 'PUT' && $path === '/auth/me') {
+        $claims = $authMiddleware->authenticate(Request::bearerToken());
+        $authController->updateProfile($claims);
     } elseif ($method === 'POST' && $path === '/auth/logout') {
         $authController->logout();
     } elseif ($method === 'GET' && $path === '/auth/google') {

@@ -32,27 +32,46 @@ final class UserRepository
 
     public function findById(int $id): ?array
     {
-        $stmt = $this->pdo->prepare('SELECT id, name, email, is_email_verified FROM users WHERE id = :id LIMIT 1');
+        $stmt = $this->pdo->prepare('SELECT id, name, email, phone, birth_date, gender, cpf, address, belt, degree, last_graduation, academy_name, is_email_verified FROM users WHERE id = :id LIMIT 1');
         $stmt->execute(['id' => $id]);
         $user = $stmt->fetch();
 
         return $user ?: null;
     }
 
-    public function create(string $name, string $email, ?string $passwordHash = null, ?string $googleId = null): array
+    public function create(array $data): array
     {
-        $stmt = $this->pdo->prepare('INSERT INTO users (name, email, password_hash, google_id) VALUES (:name, :email, :password_hash, :google_id)');
+        $stmt = $this->pdo->prepare('INSERT INTO users (name, email, password_hash, google_id, academy_name, phone, birth_date, gender, cpf, address, belt, degree, last_graduation) VALUES (:name, :email, :password_hash, :google_id, :academy_name, :phone, :birth_date, :gender, :cpf, :address, :belt, :degree, :last_graduation)');
+        
         $stmt->execute([
-            'name' => $name,
-            'email' => mb_strtolower($email),
-            'password_hash' => $passwordHash,
-            'google_id' => $googleId,
+            'name' => $data['name'],
+            'email' => mb_strtolower($data['email']),
+            'password_hash' => $data['password_hash'] ?? null,
+            'google_id' => $data['google_id'] ?? null,
+            'academy_name' => $data['academy_name'] ?? null,
+            'phone' => $data['phone'] ?? null,
+            'birth_date' => $data['birth_date'] ?? null,
+            'gender' => $data['gender'] ?? null,
+            'cpf' => $data['cpf'] ?? null,
+            'address' => $data['address'] ?? null,
+            'belt' => $data['belt'] ?? null,
+            'degree' => $data['degree'] ?? null,
+            'last_graduation' => $data['last_graduation'] ?? null,
         ]);
 
         return [
             'id' => (int) $this->pdo->lastInsertId(),
-            'name' => $name,
-            'email' => mb_strtolower($email),
+            'name' => $data['name'],
+            'email' => mb_strtolower($data['email']),
+            'phone' => $data['phone'] ?? null,
+            'birth_date' => $data['birth_date'] ?? null,
+            'gender' => $data['gender'] ?? null,
+            'cpf' => $data['cpf'] ?? null,
+            'address' => $data['address'] ?? null,
+            'belt' => $data['belt'] ?? null,
+            'degree' => $data['degree'] ?? null,
+            'last_graduation' => $data['last_graduation'] ?? null,
+            'academy_name' => $data['academy_name'] ?? null,
         ];
     }
 
@@ -72,5 +91,27 @@ final class UserRepository
             'id' => $userId,
             'password_hash' => $passwordHash,
         ]);
+    }
+
+    public function update(int $userId, array $data): void
+    {
+        $fields = [
+            'name' => $data['name'],
+            'academy_name' => $data['academy_name'] ?? null,
+            'phone' => $data['phone'] ?? null,
+            'birth_date' => $data['birth_date'] ?? null,
+            'gender' => $data['gender'] ?? null,
+            'cpf' => $data['cpf'] ?? null,
+            'address' => $data['address'] ?? null,
+            'belt' => $data['belt'] ?? null,
+            'degree' => $data['degree'] ?? null,
+            'last_graduation' => $data['last_graduation'] ?? null,
+        ];
+
+        $sql = 'UPDATE users SET name = :name, academy_name = :academy_name, phone = :phone, birth_date = :birth_date, gender = :gender, cpf = :cpf, address = :address, belt = :belt, degree = :degree, last_graduation = :last_graduation WHERE id = :id';
+        
+        $stmt = $this->pdo->prepare($sql);
+        $fields['id'] = $userId;
+        $stmt->execute($fields);
     }
 }

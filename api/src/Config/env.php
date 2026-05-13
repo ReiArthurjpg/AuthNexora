@@ -5,6 +5,7 @@ declare(strict_types=1);
 return [
     'app' => [
         'base_url' => $_ENV['APP_BASE_URL'] ?? 'http://localhost:8080',
+        'frontend_url' => $_ENV['FRONTEND_URL'] ?? 'http://localhost:3000',
         'frontend_reset_url' => $_ENV['FRONTEND_RESET_URL'] ?? 'http://localhost:3000/reset-password',
     ],
     'db' => [

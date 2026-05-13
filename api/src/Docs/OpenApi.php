@@ -24,6 +24,15 @@ use OpenApi\Attributes as OA;
             properties: [
                 new OA\Property(property: "name", type: "string", example: "Maria Silva"),
                 new OA\Property(property: "email", type: "string", format: "email", example: "maria@email.com"),
+                new OA\Property(property: "academy_name", type: "string", example: "Gracie Barra"),
+                new OA\Property(property: "phone", type: "string", example: "+55 11 99999-9999"),
+                new OA\Property(property: "birth_date", type: "string", format: "date", example: "1990-05-15"),
+                new OA\Property(property: "gender", type: "string", example: "Feminino"),
+                new OA\Property(property: "cpf", type: "string", example: "123.456.789-00"),
+                new OA\Property(property: "address", type: "string", example: "Rua das Flores, 123"),
+                new OA\Property(property: "belt", type: "string", example: "Azul"),
+                new OA\Property(property: "degree", type: "string", example: "2º Grau"),
+                new OA\Property(property: "last_graduation", type: "string", format: "date", example: "2023-10-01"),
                 new OA\Property(property: "password", type: "string", format: "password", example: "SenhaForte@123"),
                 new OA\Property(property: "confirmPassword", type: "string", format: "password", example: "SenhaForte@123")
             ]
@@ -65,6 +74,35 @@ use OpenApi\Attributes as OA;
     responses: [
         new OA\Response(response: 200, description: "Usuário atual"),
         new OA\Response(response: 401, description: "Não autenticado")
+    ]
+)]
+
+#[OA\Put(
+    path: "/auth/me",
+    tags: ["Auth"],
+    summary: "Atualiza dados do usuário autenticado",
+    security: [["bearerAuth" => []]],
+    requestBody: new OA\RequestBody(
+        required: true,
+        content: new OA\JsonContent(
+            properties: [
+                new OA\Property(property: "name", type: "string", example: "Maria Silva"),
+                new OA\Property(property: "academy_name", type: "string", example: "Gracie Barra"),
+                new OA\Property(property: "phone", type: "string", example: "+55 11 99999-9999"),
+                new OA\Property(property: "birth_date", type: "string", format: "date", example: "1990-05-15"),
+                new OA\Property(property: "gender", type: "string", example: "Feminino"),
+                new OA\Property(property: "cpf", type: "string", example: "123.456.789-00"),
+                new OA\Property(property: "address", type: "string", example: "Rua das Flores, 123"),
+                new OA\Property(property: "belt", type: "string", example: "Azul"),
+                new OA\Property(property: "degree", type: "string", example: "2º Grau"),
+                new OA\Property(property: "last_graduation", type: "string", format: "date", example: "2023-10-01")
+            ]
+        )
+    ),
+    responses: [
+        new OA\Response(response: 200, description: "Perfil atualizado com sucesso"),
+        new OA\Response(response: 401, description: "Não autenticado"),
+        new OA\Response(response: 422, description: "Dados inválidos")
     ]
 )]
 
