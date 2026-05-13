@@ -1,6 +1,10 @@
 <?php
 declare(strict_types=1);
 
+ini_set('display_errors', '1');
+ini_set('display_startup_errors', '1');
+error_reporting(E_ALL);
+
 use App\Config\Database;
 use App\Controllers\AuthController;
 use App\Controllers\PasswordController;
@@ -66,10 +70,23 @@ try {
         http_response_code(204);
         exit;
     } elseif ($method === 'GET' && $path === '/api-docs') {
-        $generator = new \OpenApi\Generator();
-        $openapi = $generator->generate([__DIR__ . '/../src']);
-        header('Content-Type: application/json; charset=utf-8');
-        echo $openapi->toJson();
+        ob_start();
+        try {
+            $generator = new \OpenApi\Generator();
+            $openapi = $generator->generate([__DIR__ . '/../src']);
+            ob_end_clean();
+            header('Content-Type: application/json; charset=utf-8');
+            echo $openapi->toJson();
+        } catch (\Throwable $e) {
+            ob_end_clean();
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode([
+                'openapi' => '3.0.0',
+                'info' => ['title' => 'Error', 'version' => '1.0.0'],
+                'paths' => [],
+                'error' => $e->getMessage()
+            ]);
+        }
         exit;
     } elseif ($method === 'GET' && $path === '/swagger') {
         echo <<<HTML
