@@ -30,12 +30,11 @@ $env = require __DIR__ . '/../src/Config/env.php';
 
 $requestOrigin = $_SERVER['HTTP_ORIGIN'] ?? '';
 
-// Permite localhost e domínios .vercel.app
 if ($requestOrigin !== '') {
-    if (preg_match('/^https?:\/\/(localhost|.*\.vercel\.app)(:\d+)?$/', $requestOrigin)) {
-        header("Access-Control-Allow-Origin: {$requestOrigin}");
-        header('Vary: Origin');
-    }
+    header("Access-Control-Allow-Origin: {$requestOrigin}");
+    header('Vary: Origin');
+} else {
+    header("Access-Control-Allow-Origin: *");
 }
 
 header('Access-Control-Allow-Methods: GET,POST,PUT,OPTIONS');
