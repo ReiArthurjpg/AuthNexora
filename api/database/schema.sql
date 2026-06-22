@@ -14,8 +14,12 @@ CREATE TABLE users (
   google_id VARCHAR(255) NULL UNIQUE,
   password_hash VARCHAR(255) NULL,
   is_email_verified TINYINT(1) NOT NULL DEFAULT 0,
+  created_by BIGINT UNSIGNED NULL,
+  updated_by BIGINT UNSIGNED NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_users_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
+  CONSTRAINT fk_users_updated_by FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
 );
 
 CREATE TABLE password_resets (
@@ -29,3 +33,9 @@ CREATE TABLE password_resets (
   INDEX idx_user_id (user_id),
   INDEX idx_expires_at (expires_at)
 );
+
+-- Inserir usuário administrador padrão para testes
+-- Email: admin@nexora.com
+-- Senha: Admin@123
+INSERT INTO users (name, email, password_hash, is_email_verified) 
+VALUES ('Administrador', 'admin@nexora.com', '$argon2id$v=19$m=65536,t=4,p=1$WVVzY0dJck50VzNkQ29yZQ$2IXEHHNWVmmjYpaUIxELe2INWrMwo01TzXIToF3jUrE', 1);

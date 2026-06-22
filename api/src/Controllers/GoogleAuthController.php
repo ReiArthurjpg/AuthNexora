@@ -26,8 +26,7 @@ final class GoogleAuthController
     public function login(): void
     {
         $url = $this->googleAuth->getAuthUrl();
-        header('Location: ' . $url, true, 302);
-        exit;
+        Response::json(['url' => $url]);
     }
 
     public function callback(): void
@@ -53,13 +52,8 @@ final class GoogleAuthController
                     // Vincula a conta Google ao usuário existente
                     $this->users->linkGoogleAccount((int) $user['id'], $googleUser['google_id']);
                 } else {
-                    // 3. Cria novo usuário
-                    $user = $this->users->create([
-                        'name' => $googleUser['name'],
-                        'email' => $googleUser['email'],
-                        'password_hash' => null, // Sem senha inicial
-                        'google_id' => $googleUser['google_id']
-                    ]);
+                    // 3. Rejeita o login se o email não estiver cadastrado
+                    throw new Exception('Apenas usuários previamente cadastrados podem fazer login.');
                 }
             }
 

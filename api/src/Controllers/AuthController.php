@@ -20,7 +20,7 @@ final class AuthController
     ) {
     }
 
-    public function signup(): void
+    public function signup(array $claims = []): void
     {
         $body = Request::jsonBody();
         $errors = $this->validateSignup($body);
@@ -35,7 +35,8 @@ final class AuthController
             return;
         }
 
-        $user = $this->auth->signup($body);
+        $createdBy = isset($claims['sub']) ? (int) $claims['sub'] : null;
+        $user = $this->auth->signup($body, $createdBy);
         Response::json(['message' => 'Usuário criado com sucesso', 'user' => $user], 201);
     }
 
@@ -95,6 +96,7 @@ final class AuthController
             return;
         }
 
+        $body['updated_by'] = $userId;
         $this->users->update($userId, $body);
         $updatedUser = $this->users->findById($userId);
 

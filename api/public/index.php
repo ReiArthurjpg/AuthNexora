@@ -138,7 +138,8 @@ try {
         HTML;
         exit;
     } elseif ($method === 'POST' && $path === '/auth/signup') {
-        $authController->signup();
+        $claims = $authMiddleware->authenticate(Request::bearerToken());
+        $authController->signup($claims);
     } elseif ($method === 'POST' && $path === '/auth/login') {
         $authController->login();
     } elseif ($method === 'GET' && $path === '/auth/me') {

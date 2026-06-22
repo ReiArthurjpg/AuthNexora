@@ -17,6 +17,7 @@ use OpenApi\Attributes as OA;
     path: "/auth/signup",
     tags: ["Auth"],
     summary: "Cria novo usuário",
+    security: [["bearerAuth" => []]],
     requestBody: new OA\RequestBody(
         required: true,
         content: new OA\JsonContent(
@@ -40,6 +41,7 @@ use OpenApi\Attributes as OA;
     ),
     responses: [
         new OA\Response(response: 201, description: "Usuário criado"),
+        new OA\Response(response: 401, description: "Não autenticado"),
         new OA\Response(response: 422, description: "Dados inválidos"),
         new OA\Response(response: 409, description: "E-mail já cadastrado")
     ]

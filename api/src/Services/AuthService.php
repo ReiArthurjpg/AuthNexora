@@ -14,9 +14,12 @@ final class AuthService
     ) {
     }
 
-    public function signup(array $data): array
+    public function signup(array $data, ?int $createdBy = null): array
     {
         $data['password_hash'] = password_hash($data['password'], PASSWORD_ARGON2ID);
+        if ($createdBy !== null) {
+            $data['created_by'] = $createdBy;
+        }
         return $this->users->create($data);
     }
 
