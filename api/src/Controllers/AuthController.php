@@ -154,4 +154,40 @@ final class AuthController
         $data = $this->auth->issueTokenForUser($user);
         Response::json($data);
     }
+
+    public function verifyEmail(): void
+    {
+        $token = $_GET['token'] ?? '';
+        if (empty($token)) {
+            Response::error('MISSING_TOKEN', 'Token de verificação ausente', [], 400);
+            return;
+        }
+
+        try {
+            $claims = (new \App\Services\JwtService(
+                (require __DIR__ . '/../Config/env.php')['jwt']['secret'],
+                (require __DIR__ . '/../Config/env.php')['jwt']['issuer'],
+                (require __DIR__ . '/../Config/env.php')['jwt']['expires_in']
+            ))->decodeToken($token);
+
+            if (($claims['scope'] ?? '') !== 'email_verification') {
+                throw new \RuntimeException('Token inválido');
+            }
+
+            $userId = (int) ($claims['user_id'] ?? 0);
+            $user = $this->users->findById($userId);
+
+            if (!$user) {
+                throw new \RuntimeException('Usuário não encontrado');
+            }
+
+            if (!$user['is_email_verified']) {
+                $this->users->verifyEmail($userId);
+            }
+
+            Response::json(['message' => 'E-mail verificado com sucesso']);
+        } catch (\Throwable $e) {
+            Response::error('INVALID_TOKEN', 'Token inválido ou expirado', [], 401);
+        }
+    }
 }

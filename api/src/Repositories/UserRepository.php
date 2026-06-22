@@ -143,4 +143,12 @@ final class UserRepository
             'id' => $userId,
         ]);
     }
+
+    public function verifyEmail(int $userId): void
+    {
+        $stmt = $this->pdo->prepare('UPDATE users SET is_email_verified = 1 WHERE id = :id');
+        $stmt->execute([
+            'id' => $userId,
+        ]);
+    }
 }

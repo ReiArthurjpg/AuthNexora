@@ -40,4 +40,32 @@ final class EmailService
             // Intencionalmente silencioso para não expor detalhes sensíveis.
         }
     }
+
+    public function sendWelcomeEmail(string $toEmail, string $toName, string $verifyLink, string $templatePath): void
+    {
+        $template = file_get_contents($templatePath) ?: '';
+        $html = str_replace(['{{name}}', '{{verify_link}}'], [htmlspecialchars($toName), htmlspecialchars($verifyLink)], $template);
+
+        $mail = new PHPMailer(true);
+
+        try {
+            $mail->isSMTP();
+            $mail->Host = $this->mailConfig['host'];
+            $mail->Port = $this->mailConfig['port'];
+            $mail->SMTPAuth = true;
+            $mail->Username = $this->mailConfig['username'];
+            $mail->Password = $this->mailConfig['password'];
+            $mail->SMTPSecure = $this->mailConfig['encryption'];
+
+            $mail->setFrom($this->mailConfig['from_email'], $this->mailConfig['from_name']);
+            $mail->addAddress($toEmail, $toName);
+            $mail->isHTML(true);
+            $mail->Subject = 'Bem-vindo à Nexora - Confirme seu e-mail';
+            $mail->Body = $html;
+
+            $mail->send();
+        } catch (Exception) {
+            // Intencionalmente silencioso para não expor detalhes sensíveis.
+        }
+    }
 }

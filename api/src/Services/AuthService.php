@@ -10,7 +10,9 @@ final class AuthService
 {
     public function __construct(
         private readonly UserRepository $users,
-        private readonly JwtService $jwt
+        private readonly JwtService $jwt,
+        private readonly EmailService $email,
+        private readonly array $env
     ) {
     }
 
@@ -20,7 +22,19 @@ final class AuthService
         if ($createdBy !== null) {
             $data['created_by'] = $createdBy;
         }
-        return $this->users->create($data);
+        $user = $this->users->create($data);
+
+        // Disparar e-mail de verificação
+        $token = $this->jwt->issueToken([
+            'user_id' => $user['id'],
+            'scope' => 'email_verification'
+        ]);
+        
+        $link = $this->env['app']['frontend_verify_email_url'] . '?token=' . urlencode($token);
+        $templatePath = dirname(__DIR__, 2) . '/templates/welcome_email.html';
+        $this->email->sendWelcomeEmail($user['email'], $user['name'], $link, $templatePath);
+
+        return $user;
     }
 
     public function login(string $email, string $password): ?array
