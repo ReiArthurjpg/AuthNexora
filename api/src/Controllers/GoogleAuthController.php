@@ -26,8 +26,7 @@ final class GoogleAuthController
     public function login(): void
     {
         $url = $this->googleAuth->getAuthUrl();
-        header('Location: ' . $url, true, 302);
-        exit;
+        Response::json(['url' => $url]);
     }
 
     public function callback(): void
