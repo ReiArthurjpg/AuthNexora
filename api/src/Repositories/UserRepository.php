@@ -41,7 +41,7 @@ final class UserRepository
 
     public function create(array $data): array
     {
-        $stmt = $this->pdo->prepare('INSERT INTO users (name, email, password_hash, google_id, academy_name, phone, birth_date, gender, cpf, address, belt, degree, last_graduation) VALUES (:name, :email, :password_hash, :google_id, :academy_name, :phone, :birth_date, :gender, :cpf, :address, :belt, :degree, :last_graduation)');
+        $stmt = $this->pdo->prepare('INSERT INTO users (name, email, password_hash, google_id, academy_name, phone, birth_date, gender, cpf, address, belt, degree, last_graduation, created_by) VALUES (:name, :email, :password_hash, :google_id, :academy_name, :phone, :birth_date, :gender, :cpf, :address, :belt, :degree, :last_graduation, :created_by)');
         
         $stmt->execute([
             'name' => $data['name'],
@@ -57,6 +57,7 @@ final class UserRepository
             'belt' => $data['belt'] ?? null,
             'degree' => $data['degree'] ?? null,
             'last_graduation' => $data['last_graduation'] ?? null,
+            'created_by' => $data['created_by'] ?? null,
         ]);
 
         return [
@@ -72,6 +73,7 @@ final class UserRepository
             'degree' => $data['degree'] ?? null,
             'last_graduation' => $data['last_graduation'] ?? null,
             'academy_name' => $data['academy_name'] ?? null,
+            'created_by' => $data['created_by'] ?? null,
         ];
     }
 
@@ -106,9 +108,10 @@ final class UserRepository
             'belt' => $data['belt'] ?? null,
             'degree' => $data['degree'] ?? null,
             'last_graduation' => $data['last_graduation'] ?? null,
+            'updated_by' => $data['updated_by'] ?? null,
         ];
 
-        $sql = 'UPDATE users SET name = :name, academy_name = :academy_name, phone = :phone, birth_date = :birth_date, gender = :gender, cpf = :cpf, address = :address, belt = :belt, degree = :degree, last_graduation = :last_graduation WHERE id = :id';
+        $sql = 'UPDATE users SET name = :name, academy_name = :academy_name, phone = :phone, birth_date = :birth_date, gender = :gender, cpf = :cpf, address = :address, belt = :belt, degree = :degree, last_graduation = :last_graduation, updated_by = :updated_by WHERE id = :id';
         
         $stmt = $this->pdo->prepare($sql);
         $fields['id'] = $userId;
