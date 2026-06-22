@@ -19,12 +19,13 @@ final class JwtService
     {
         $now = time();
 
-        $claims = [
+        $claims = array_merge([
             'iss' => $this->issuer,
             'iat' => $now,
             'exp' => $now + $this->expiresIn,
             'sub' => (string) $payload['user_id'],
-        ];
+        ], $payload);
+        unset($claims['user_id']);
 
         return $this->encode($claims);
     }

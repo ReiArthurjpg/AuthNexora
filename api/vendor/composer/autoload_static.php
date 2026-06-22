@@ -23,6 +23,11 @@ class ComposerStaticInitf6e56b6f09953107ac28be187952ade7
         array (
             'phpseclib3\\' => 11,
         ),
+        'c' =>
+        array (
+            'chillerlan\\Settings\\' => 20,
+            'chillerlan\\QRCode\\' => 18,
+        ),
         'S' =>
         array (
             'Symfony\\Polyfill\\Php80\\' => 23,
@@ -30,6 +35,10 @@ class ComposerStaticInitf6e56b6f09953107ac28be187952ade7
             'Symfony\\Polyfill\\Ctype\\' => 23,
             'Symfony\\Component\\Yaml\\' => 23,
             'Symfony\\Component\\Finder\\' => 25,
+        ),
+        'R' =>
+        array (
+            'RobThree\\Auth\\' => 14,
         ),
         'P' =>
         array (
@@ -78,6 +87,14 @@ class ComposerStaticInitf6e56b6f09953107ac28be187952ade7
         array (
             0 => __DIR__ . '/..' . '/phpseclib/phpseclib/phpseclib',
         ),
+        'chillerlan\\Settings\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/chillerlan/php-settings-container/src',
+        ),
+        'chillerlan\\QRCode\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/chillerlan/php-qrcode/src',
+        ),
         'Symfony\\Polyfill\\Php80\\' =>
         array (
             0 => __DIR__ . '/..' . '/symfony/polyfill-php80',
@@ -97,6 +114,10 @@ class ComposerStaticInitf6e56b6f09953107ac28be187952ade7
         'Symfony\\Component\\Finder\\' =>
         array (
             0 => __DIR__ . '/..' . '/symfony/finder',
+        ),
+        'RobThree\\Auth\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/robthree/twofactorauth/lib',
         ),
         'Psr\\Log\\' =>
         array (

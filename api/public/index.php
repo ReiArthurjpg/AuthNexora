@@ -20,6 +20,7 @@ use App\Services\PasswordResetService;
 use App\Services\RateLimitService;
 use App\Services\GoogleAuthService;
 use App\Controllers\GoogleAuthController;
+use App\Controllers\TwoFactorAuthController;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
@@ -63,6 +64,7 @@ $googleAuthController = new GoogleAuthController(
     $jwt,
     $env
 );
+$twoFactorAuthController = new TwoFactorAuthController($userRepo);
 $authMiddleware = new AuthMiddleware($jwt);
 
 $method = $_SERVER['REQUEST_METHOD'];
@@ -160,6 +162,18 @@ try {
         $passwordController->resetPassword();
     } elseif ($method === 'GET' && $path === '/auth/reset-password/validate') {
         $passwordController->validateResetToken();
+    } elseif ($method === 'POST' && $path === '/auth/2fa/verify') {
+        $claims = $authMiddleware->authenticate(Request::bearerToken());
+        $authController->verify2fa($claims);
+    } elseif ($method === 'POST' && $path === '/2fa/generate') {
+        $claims = $authMiddleware->authenticate(Request::bearerToken());
+        $twoFactorAuthController->generate($claims);
+    } elseif ($method === 'POST' && $path === '/2fa/enable') {
+        $claims = $authMiddleware->authenticate(Request::bearerToken());
+        $twoFactorAuthController->enable($claims);
+    } elseif ($method === 'POST' && $path === '/2fa/disable') {
+        $claims = $authMiddleware->authenticate(Request::bearerToken());
+        $twoFactorAuthController->disable($claims);
     } else {
         Response::error('NOT_FOUND', 'Endpoint não encontrado', [], 404);
     }
