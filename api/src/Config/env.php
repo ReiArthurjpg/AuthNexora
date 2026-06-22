@@ -40,6 +40,7 @@ return [
         'reset_token_ttl_minutes' => 30,
         'rate_limit_max_attempts' => 5,
         'rate_limit_window_seconds' => 60,
+        'refresh_token_ttl_days' => 7,
     ],
     'google' => [
         'client_id' => $_ENV['GOOGLE_CLIENT_ID'] ?? '',

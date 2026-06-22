@@ -12,6 +12,7 @@ use App\Helpers\Request;
 use App\Helpers\Response;
 use App\Middleware\AuthMiddleware;
 use App\Repositories\PasswordResetRepository;
+use App\Repositories\RefreshTokenRepository;
 use App\Repositories\UserRepository;
 use App\Services\AuthService;
 use App\Services\EmailService;
@@ -50,11 +51,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 $pdo = Database::connection();
 $userRepo = new UserRepository($pdo);
 $resetRepo = new PasswordResetRepository($pdo);
+$refreshTokenRepo = new RefreshTokenRepository($pdo);
 $jwt = new JwtService($env['jwt']['secret'], $env['jwt']['issuer'], $env['jwt']['expires_in']);
 $rateLimit = new RateLimitService($env['security']['rate_limit_max_attempts'], $env['security']['rate_limit_window_seconds']);
 
 $emailService = new EmailService($env['mail']);
-$authController = new AuthController(new AuthService($userRepo, $jwt, $emailService, $env), $userRepo, $rateLimit);
+$authController = new AuthController(new AuthService($userRepo, $jwt, $emailService, $env, $refreshTokenRepo), $userRepo, $rateLimit);
 $passwordController = new PasswordController(
     new PasswordResetService($userRepo, $resetRepo, $emailService, $env),
     $rateLimit
@@ -165,6 +167,8 @@ try {
         $passwordController->validateResetToken();
     } elseif ($method === 'GET' && $path === '/auth/verify-email') {
         $authController->verifyEmail();
+    } elseif ($method === 'POST' && $path === '/auth/refresh') {
+        $authController->refresh();
     } elseif ($method === 'POST' && $path === '/auth/2fa/verify') {
         $claims = $authMiddleware->authenticate(Request::bearerToken());
         $authController->verify2fa($claims);

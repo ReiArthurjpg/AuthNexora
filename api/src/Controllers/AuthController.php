@@ -83,7 +83,28 @@ final class AuthController
 
     public function logout(): void
     {
+        $body = Request::jsonBody();
+        $refreshToken = $body['refreshToken'] ?? null;
+        
+        $this->auth->logout($refreshToken);
+        
         Response::json(['message' => 'Logout realizado com sucesso']);
+    }
+
+    public function refresh(): void
+    {
+        $body = Request::jsonBody();
+        if (empty($body['refreshToken'])) {
+            Response::error('MISSING_TOKEN', 'Refresh token ausente', [], 400);
+            return;
+        }
+
+        try {
+            $data = $this->auth->refreshToken($body['refreshToken']);
+            Response::json($data);
+        } catch (RuntimeException $e) {
+            Response::error('INVALID_TOKEN', $e->getMessage(), [], 401);
+        }
     }
 
     public function updateProfile(array $claims): void

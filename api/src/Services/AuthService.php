@@ -5,6 +5,10 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Repositories\UserRepository;
+use App\Repositories\RefreshTokenRepository;
+use DateInterval;
+use DateTimeImmutable;
+use RuntimeException;
 
 final class AuthService
 {
@@ -12,7 +16,8 @@ final class AuthService
         private readonly UserRepository $users,
         private readonly JwtService $jwt,
         private readonly EmailService $email,
-        private readonly array $env
+        private readonly array $env,
+        private readonly RefreshTokenRepository $refreshTokens
     ) {
     }
 
@@ -63,8 +68,16 @@ final class AuthService
     {
         $token = $this->jwt->issueToken(['user_id' => (int) $user['id']]);
 
+        $refreshToken = bin2hex(random_bytes(32));
+        $hash = hash('sha256', $refreshToken);
+        $ttlDays = $this->env['security']['refresh_token_ttl_days'] ?? 7;
+        $expiresAt = (new DateTimeImmutable())->add(new DateInterval('P' . $ttlDays . 'D'));
+        
+        $this->refreshTokens->create((int) $user['id'], $hash, $expiresAt);
+
         return [
             'accessToken' => $token,
+            'refreshToken' => $refreshToken,
             'tokenType' => 'Bearer',
             'expiresIn' => 3600,
             'user' => [
@@ -82,5 +95,33 @@ final class AuthService
                 'academy_name' => $user['academy_name'] ?? null,
             ],
         ];
+    }
+
+    public function refreshToken(string $token): array
+    {
+        $hash = hash('sha256', $token);
+        $row = $this->refreshTokens->findValidByHash($hash);
+
+        if (!$row) {
+            throw new RuntimeException('Refresh token inválido ou expirado');
+        }
+
+        // Revogar o token antigo (Token Rotation)
+        $this->refreshTokens->deleteByHash($hash);
+
+        $user = $this->users->findById((int) $row['user_id']);
+        if (!$user) {
+            throw new RuntimeException('Usuário não encontrado');
+        }
+
+        return $this->issueTokenForUser($user);
+    }
+    
+    public function logout(string $refreshToken = null): void
+    {
+        if ($refreshToken) {
+            $hash = hash('sha256', $refreshToken);
+            $this->refreshTokens->deleteByHash($hash);
+        }
     }
 }
