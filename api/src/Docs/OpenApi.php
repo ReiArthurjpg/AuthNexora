@@ -281,6 +281,39 @@ use OpenApi\Attributes as OA;
         new OA\Response(response: 401, description: "Senha inválida")
     ]
 )]
+#[OA\Get(
+    path: "/auth/verify-email",
+    tags: ["Auth"],
+    summary: "Verifica e-mail do usuário",
+    parameters: [
+        new OA\Parameter(name: "token", in: "query", required: true, description: "Token de verificação enviado por e-mail", schema: new OA\Schema(type: "string"))
+    ],
+    responses: [
+        new OA\Response(response: 200, description: "E-mail verificado com sucesso"),
+        new OA\Response(response: 400, description: "Token ausente"),
+        new OA\Response(response: 401, description: "Token inválido ou expirado")
+    ]
+)]
+
+#[OA\Post(
+    path: "/auth/refresh",
+    tags: ["Auth"],
+    summary: "Renova o Access Token usando um Refresh Token",
+    requestBody: new OA\RequestBody(
+        required: true,
+        content: new OA\JsonContent(
+            required: ["refreshToken"],
+            properties: [
+                new OA\Property(property: "refreshToken", type: "string", example: "seu_refresh_token_aqui")
+            ]
+        )
+    ),
+    responses: [
+        new OA\Response(response: 200, description: "Tokens renovados com sucesso"),
+        new OA\Response(response: 400, description: "Refresh token ausente"),
+        new OA\Response(response: 401, description: "Refresh token inválido ou expirado")
+    ]
+)]
 final class OpenApi
 {
 }
