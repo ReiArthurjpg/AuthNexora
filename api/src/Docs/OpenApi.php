@@ -194,6 +194,93 @@ use OpenApi\Attributes as OA;
         new OA\Response(response: 401, description: "Autenticação falhou")
     ]
 )]
+#[OA\Post(
+    path: "/auth/2fa/verify",
+    tags: ["Auth"],
+    summary: "Verifica o código 2FA e retorna o token de acesso final",
+    security: [["bearerAuth" => []]],
+    requestBody: new OA\RequestBody(
+        required: true,
+        content: new OA\JsonContent(
+            required: ["code"],
+            properties: [
+                new OA\Property(property: "code", type: "string", example: "123456")
+            ]
+        )
+    ),
+    responses: [
+        new OA\Response(response: 200, description: "Sucesso")
+    ]
+)]
+
+#[OA\Post(
+    path: "/2fa/generate",
+    tags: ["2FA"],
+    summary: "Gera uma nova chave secreta e QR Code para 2FA",
+    security: [["bearerAuth" => []]],
+    responses: [
+        new OA\Response(
+            response: 200,
+            description: "Sucesso",
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: "secret", type: "string", example: "JBSWY3DPEHPK3PXP"),
+                    new OA\Property(property: "qrCode", type: "string", example: "data:image/png;base64,..."),
+                    new OA\Property(property: "url", type: "string", example: "otpauth://totp/AuthNexora...")
+                ]
+            )
+        )
+    ]
+)]
+
+#[OA\Post(
+    path: "/2fa/enable",
+    tags: ["2FA"],
+    summary: "Ativa o 2FA",
+    security: [["bearerAuth" => []]],
+    requestBody: new OA\RequestBody(
+        required: true,
+        content: new OA\JsonContent(
+            required: ["secret", "code"],
+            properties: [
+                new OA\Property(property: "secret", type: "string", example: "JBSWY3DPEHPK3PXP"),
+                new OA\Property(property: "code", type: "string", example: "123456")
+            ]
+        )
+    ),
+    responses: [
+        new OA\Response(
+            response: 200,
+            description: "Ativado com sucesso",
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: "message", type: "string", example: "Autenticação de dois fatores ativada com sucesso."),
+                    new OA\Property(property: "recoveryCodes", type: "array", items: new OA\Items(type: "string"))
+                ]
+            )
+        )
+    ]
+)]
+
+#[OA\Post(
+    path: "/2fa/disable",
+    tags: ["2FA"],
+    summary: "Desativa o 2FA",
+    security: [["bearerAuth" => []]],
+    requestBody: new OA\RequestBody(
+        required: true,
+        content: new OA\JsonContent(
+            required: ["password"],
+            properties: [
+                new OA\Property(property: "password", type: "string", format: "password", example: "SenhaForte@123")
+            ]
+        )
+    ),
+    responses: [
+        new OA\Response(response: 200, description: "Desativado com sucesso"),
+        new OA\Response(response: 401, description: "Senha inválida")
+    ]
+)]
 final class OpenApi
 {
 }

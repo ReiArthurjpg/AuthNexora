@@ -128,4 +128,30 @@ final class AuthController
 
         return $errors;
     }
+
+    public function verify2fa(array $claims): void
+    {
+        if (($claims['scope'] ?? '') !== '2fa') {
+            Response::error('INVALID_TOKEN', 'Token inválido para esta operação', [], 401);
+            return;
+        }
+
+        $userId = (int) ($claims['sub'] ?? 0);
+        $user = $this->users->findByEmail($this->users->findById($userId)['email']);
+        
+        $body = Request::jsonBody();
+        if (empty($body['code'])) {
+            Response::error('VALIDATION_ERROR', 'Código 2FA é obrigatório', [], 422);
+            return;
+        }
+
+        $tfa = new \RobThree\Auth\TwoFactorAuth(new \App\Providers\ChillerlanQRCodeProvider(), 'AuthNexora');
+        if (!$tfa->verifyCode($user['two_factor_secret'], $body['code'])) {
+            Response::error('INVALID_CODE', 'Código 2FA inválido', [], 401);
+            return;
+        }
+
+        $data = $this->auth->issueTokenForUser($user);
+        Response::json($data);
+    }
 }

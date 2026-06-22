@@ -30,6 +30,23 @@ final class AuthService
             return null;
         }
 
+        if (!empty($user['is_two_factor_enabled'])) {
+            $tempToken = $this->jwt->issueToken([
+                'user_id' => (int) $user['id'],
+                'scope' => '2fa',
+            ]);
+
+            return [
+                'requires_2fa' => true,
+                'tempToken' => $tempToken,
+            ];
+        }
+
+        return $this->issueTokenForUser($user);
+    }
+
+    public function issueTokenForUser(array $user): array
+    {
         $token = $this->jwt->issueToken(['user_id' => (int) $user['id']]);
 
         return [
