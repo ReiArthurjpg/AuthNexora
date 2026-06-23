@@ -50,8 +50,12 @@ final class PasswordResetService
             return false;
         }
 
-        $this->users->updatePassword((int) $row['user_id'], password_hash($newPassword, PASSWORD_ARGON2ID));
+        $userId = (int) $row['user_id'];
+        $this->users->updatePassword($userId, password_hash($newPassword, PASSWORD_ARGON2ID));
         $this->resets->markUsed((int) $row['id']);
+        
+        // Zera o contador de tentativas falhas (desbloqueia a conta se estava bloqueada)
+        $this->users->resetFailedLogin($userId);
 
         return true;
     }

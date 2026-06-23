@@ -17,6 +17,7 @@ CREATE TABLE users (
   two_factor_secret VARCHAR(255) NULL,
   is_two_factor_enabled TINYINT(1) NOT NULL DEFAULT 0,
   two_factor_recovery_codes TEXT NULL,
+  failed_login_attempts TINYINT UNSIGNED NOT NULL DEFAULT 0,
   created_by BIGINT UNSIGNED NULL,
   updated_by BIGINT UNSIGNED NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

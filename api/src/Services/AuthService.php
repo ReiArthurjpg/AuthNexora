@@ -45,8 +45,21 @@ final class AuthService
     public function login(string $email, string $password): ?array
     {
         $user = $this->users->findByEmail($email);
-        if (!$user || !password_verify($password, $user['password_hash'])) {
+        if (!$user) {
             return null;
+        }
+
+        if ((int) ($user['failed_login_attempts'] ?? 0) >= 3) {
+            throw new RuntimeException('ACCOUNT_LOCKED');
+        }
+
+        if (!password_verify($password, $user['password_hash'])) {
+            $this->users->incrementFailedLogin((int) $user['id']);
+            return null;
+        }
+
+        if ((int) ($user['failed_login_attempts'] ?? 0) > 0) {
+            $this->users->resetFailedLogin((int) $user['id']);
         }
 
         if (!empty($user['is_two_factor_enabled'])) {

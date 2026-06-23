@@ -61,13 +61,20 @@ final class AuthController
             return;
         }
 
-        $data = $this->auth->login($body['email'], $body['password']);
-        if (!$data) {
-            Response::error('INVALID_CREDENTIALS', 'Credenciais inválidas', [], 401);
-            return;
+        try {
+            $data = $this->auth->login($body['email'], $body['password']);
+            if (!$data) {
+                Response::error('INVALID_CREDENTIALS', 'Credenciais inválidas', [], 401);
+                return;
+            }
+            Response::json($data);
+        } catch (RuntimeException $e) {
+            if ($e->getMessage() === 'ACCOUNT_LOCKED') {
+                Response::error('ACCOUNT_LOCKED', 'Sua conta foi bloqueada devido a muitas tentativas incorretas. Por favor, redefina sua senha.', [], 403);
+                return;
+            }
+            throw $e;
         }
-
-        Response::json($data);
     }
 
     public function me(array $claims): void

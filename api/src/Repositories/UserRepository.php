@@ -32,7 +32,7 @@ final class UserRepository
 
     public function findById(int $id): ?array
     {
-        $stmt = $this->pdo->prepare('SELECT id, name, email, phone, birth_date, gender, cpf, address, belt, degree, last_graduation, academy_name, is_email_verified, is_two_factor_enabled FROM users WHERE id = :id LIMIT 1');
+        $stmt = $this->pdo->prepare('SELECT id, name, email, phone, birth_date, gender, cpf, address, belt, degree, last_graduation, academy_name, is_email_verified, is_two_factor_enabled, failed_login_attempts FROM users WHERE id = :id LIMIT 1');
         $stmt->execute(['id' => $id]);
         $user = $stmt->fetch();
 
@@ -147,6 +147,22 @@ final class UserRepository
     public function verifyEmail(int $userId): void
     {
         $stmt = $this->pdo->prepare('UPDATE users SET is_email_verified = 1 WHERE id = :id');
+        $stmt->execute([
+            'id' => $userId,
+        ]);
+    }
+
+    public function incrementFailedLogin(int $userId): void
+    {
+        $stmt = $this->pdo->prepare('UPDATE users SET failed_login_attempts = failed_login_attempts + 1 WHERE id = :id');
+        $stmt->execute([
+            'id' => $userId,
+        ]);
+    }
+
+    public function resetFailedLogin(int $userId): void
+    {
+        $stmt = $this->pdo->prepare('UPDATE users SET failed_login_attempts = 0 WHERE id = :id');
         $stmt->execute([
             'id' => $userId,
         ]);
