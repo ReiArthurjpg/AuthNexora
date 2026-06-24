@@ -17,6 +17,7 @@ CREATE TABLE users (
   two_factor_secret VARCHAR(255) NULL,
   is_two_factor_enabled TINYINT(1) NOT NULL DEFAULT 0,
   two_factor_recovery_codes TEXT NULL,
+  failed_login_attempts TINYINT UNSIGNED NOT NULL DEFAULT 0,
   created_by BIGINT UNSIGNED NULL,
   updated_by BIGINT UNSIGNED NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -42,3 +43,14 @@ CREATE TABLE password_resets (
 -- Senha: Admin@123
 INSERT INTO users (name, email, password_hash, is_email_verified) 
 VALUES ('Administrador', 'admin@nexora.com', '$argon2id$v=19$m=65536,t=4,p=1$WVVzY0dJck50VzNkQ29yZQ$2IXEHHNWVmmjYpaUIxELe2INWrMwo01TzXIToF3jUrE', 1);
+
+CREATE TABLE refresh_tokens (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id BIGINT UNSIGNED NOT NULL,
+  token_hash VARCHAR(255) NOT NULL,
+  expires_at DATETIME NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_refresh_tokens_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  INDEX idx_user_id (user_id),
+  INDEX idx_token_hash (token_hash)
+);

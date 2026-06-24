@@ -11,6 +11,7 @@ return [
         'base_url' => $_ENV['APP_BASE_URL'] ?? 'http://localhost:8080',
         'frontend_url' => $_ENV['FRONTEND_URL'] ?? 'http://localhost:3000',
         'frontend_reset_url' => $_ENV['FRONTEND_RESET_URL'] ?? 'http://localhost:3000/reset-password',
+        'frontend_verify_email_url' => $_ENV['FRONTEND_VERIFY_EMAIL_URL'] ?? 'http://localhost:3000/verify-email',
         'cors_allowed_origins' => array_values(array_filter(array_map('trim', $splitOrigins))),
     ],
     'db' => [
@@ -39,6 +40,7 @@ return [
         'reset_token_ttl_minutes' => 30,
         'rate_limit_max_attempts' => 5,
         'rate_limit_window_seconds' => 60,
+        'refresh_token_ttl_days' => 7,
     ],
     'google' => [
         'client_id' => $_ENV['GOOGLE_CLIENT_ID'] ?? '',
