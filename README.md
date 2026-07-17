@@ -12,7 +12,29 @@ Este projeto foi construído com foco em arquitetura limpa e facilidade de integ
 - Gestão de identidades e usuários.
 - Autenticação segura via JSON Web Tokens (JWT).
 - Fluxo de recuperação de senha com integração via PHPMailer.
+- Autenticação com Google OAuth.
+- Autenticação de dois fatores (2FA).
 - Documentação interativa para desenvolvedores.
+
+## 🐳 Docker (Infraestrutura)
+
+> **A infraestrutura Docker deste projeto foi centralizada no repositório [CICD](https://github.com/ReiArthurjpg/CICD).**
+>
+> Para rodar via Docker, use o `docker-compose.yml` do repositório CICD.
+> Este projeto contém apenas o `Dockerfile` para build da aplicação.
+
+## 💻 Desenvolvimento Local (XAMPP)
+
+1. Clone/copiar projeto para `htdocs` do XAMPP.
+2. No terminal:
+   ```bash
+   cd /caminho/para/htdocs/AuthNexora/api
+   composer install
+   ```
+3. Ajuste `api/.env` com credenciais locais.
+4. Importe o schema do banco manualmente usando o arquivo disponível no repositório CICD:
+   - `CICD/database/schemas/authnexora/001_initial_schema.sql`
+   - `CICD/database/seeds/authnexora/001_admin_user.sql`
 
 ## 📖 Documentação Detalhada
 
