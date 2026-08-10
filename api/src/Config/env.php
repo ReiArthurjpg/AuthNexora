@@ -15,11 +15,11 @@ return [
         'cors_allowed_origins' => array_values(array_filter(array_map('trim', $splitOrigins))),
     ],
     'db' => [
-        'host' => $_ENV['DB_HOST'],
-        'port' => $_ENV['DB_PORT'],
-        'database' => $_ENV['DB_DATABASE'],
-        'username' => $_ENV['DB_USERNAME'],
-        'password' => $_ENV['DB_PASSWORD'],
+        'host' => $_ENV['DB_HOST'] ?? 'localhost',
+        'port' => $_ENV['DB_PORT'] ?? '3306',
+        'database' => $_ENV['DB_DATABASE'] ?? $_ENV['DB_NAME'] ?? '',
+        'username' => $_ENV['DB_USERNAME'] ?? $_ENV['DB_USER'] ?? '',
+        'password' => $_ENV['DB_PASSWORD'] ?? $_ENV['DB_PASS'] ?? '',
         'charset' => 'utf8mb4',
     ],
     'jwt' => [
