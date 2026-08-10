@@ -42,7 +42,7 @@ RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' \
     /etc/apache2/conf-available/*.conf
 
 # Instalar dependências PHP
-RUN composer install \
+RUN rm -rf /var/www/vendor && composer install \
     --no-interaction \
     --prefer-dist \
     --optimize-autoloader \
