@@ -83,6 +83,42 @@ try {
     } elseif ($method === 'GET' && $path === '/favicon.ico') {
         http_response_code(204);
         exit;
+    } elseif ($method === 'GET' && $path === '/run-seed') {
+        // ── Endpoint temporário de seed ─────────────────────────────
+        // Protegido por SEED_TOKEN (variável de ambiente no Render)
+        // Remover esta rota após criar o admin!
+        $seedToken = $_ENV['SEED_TOKEN'] ?? null;
+        $providedToken = $_GET['token'] ?? '';
+
+        if (!$seedToken || !hash_equals($seedToken, $providedToken)) {
+            http_response_code(403);
+            Response::json(['error' => 'Token inválido ou ausente.']);
+            exit;
+        }
+
+        $pdo = Database::connection();
+
+        $name     = 'Administrador Nexora';
+        $email    = 'admin@nexora.com';
+        $password = 'Admin@123';
+        $hash     = password_hash($password, PASSWORD_ARGON2ID);
+
+        $check = $pdo->prepare('SELECT id FROM users WHERE email = :email LIMIT 1');
+        $check->execute(['email' => strtolower($email)]);
+        $existing = $check->fetch();
+
+        if ($existing) {
+            $stmt = $pdo->prepare('UPDATE users SET password_hash = :hash, failed_login_attempts = 0, is_email_verified = 1 WHERE email = :email');
+            $stmt->execute(['hash' => $hash, 'email' => strtolower($email)]);
+            Response::json(['status' => 'updated', 'message' => 'Senha do admin atualizada com sucesso!', 'email' => $email, 'password' => $password]);
+        } else {
+            $stmt = $pdo->prepare('INSERT INTO users (name, email, password_hash, academy_name, is_email_verified, is_two_factor_enabled, failed_login_attempts) VALUES (:name, :email, :hash, :academy, 1, 0, 0)');
+            $stmt->execute(['name' => $name, 'email' => strtolower($email), 'hash' => $hash, 'academy' => 'Nexora Headquarter']);
+            $id = $pdo->lastInsertId();
+            Response::json(['status' => 'created', 'message' => 'Admin criado com sucesso!', 'id' => $id, 'email' => $email, 'password' => $password]);
+        }
+        exit;
+
     } elseif ($method === 'GET' && $path === '/api-docs') {
         ob_start();
         try {

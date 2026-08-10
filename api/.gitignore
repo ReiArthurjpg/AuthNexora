@@ -1,6 +1,5 @@
 /vendor/
 /.env
-/composer.lock
 /public/api-docs/
 *.log
 .DS_Store
