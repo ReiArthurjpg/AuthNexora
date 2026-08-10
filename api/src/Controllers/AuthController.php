@@ -20,7 +20,7 @@ final class AuthController
     ) {
     }
 
-    public function signup(): void
+    public function signup(array $claims = []): void
     {
         $body = Request::jsonBody();
         $errors = $this->validateSignup($body);
@@ -35,7 +35,8 @@ final class AuthController
             return;
         }
 
-        $user = $this->auth->signup($body);
+        $createdBy = isset($claims['sub']) ? (int) $claims['sub'] : null;
+        $user = $this->auth->signup($body, $createdBy);
         Response::json(['message' => 'Usuário criado com sucesso', 'user' => $user], 201);
     }
 
@@ -60,13 +61,20 @@ final class AuthController
             return;
         }
 
-        $data = $this->auth->login($body['email'], $body['password']);
-        if (!$data) {
-            Response::error('INVALID_CREDENTIALS', 'Credenciais inválidas', [], 401);
-            return;
+        try {
+            $data = $this->auth->login($body['email'], $body['password']);
+            if (!$data) {
+                Response::error('INVALID_CREDENTIALS', 'Credenciais inválidas', [], 401);
+                return;
+            }
+            Response::json($data);
+        } catch (RuntimeException $e) {
+            if ($e->getMessage() === 'ACCOUNT_LOCKED') {
+                Response::error('ACCOUNT_LOCKED', 'Sua conta foi bloqueada devido a muitas tentativas incorretas. Por favor, redefina sua senha.', [], 403);
+                return;
+            }
+            throw $e;
         }
-
-        Response::json($data);
     }
 
     public function me(array $claims): void
@@ -82,7 +90,28 @@ final class AuthController
 
     public function logout(): void
     {
+        $body = Request::jsonBody();
+        $refreshToken = $body['refreshToken'] ?? null;
+        
+        $this->auth->logout($refreshToken);
+        
         Response::json(['message' => 'Logout realizado com sucesso']);
+    }
+
+    public function refresh(): void
+    {
+        $body = Request::jsonBody();
+        if (empty($body['refreshToken'])) {
+            Response::error('MISSING_TOKEN', 'Refresh token ausente', [], 400);
+            return;
+        }
+
+        try {
+            $data = $this->auth->refreshToken($body['refreshToken']);
+            Response::json($data);
+        } catch (RuntimeException $e) {
+            Response::error('INVALID_TOKEN', $e->getMessage(), [], 401);
+        }
     }
 
     public function updateProfile(array $claims): void
@@ -95,6 +124,7 @@ final class AuthController
             return;
         }
 
+        $body['updated_by'] = $userId;
         $this->users->update($userId, $body);
         $updatedUser = $this->users->findById($userId);
 
@@ -125,5 +155,67 @@ final class AuthController
         // Você pode adicionar regras específicas aqui se desejar (ex: validar formato de CPF)
 
         return $errors;
+    }
+
+    public function verify2fa(array $claims): void
+    {
+        if (($claims['scope'] ?? '') !== '2fa') {
+            Response::error('INVALID_TOKEN', 'Token inválido para esta operação', [], 401);
+            return;
+        }
+
+        $userId = (int) ($claims['sub'] ?? 0);
+        $user = $this->users->findByEmail($this->users->findById($userId)['email']);
+        
+        $body = Request::jsonBody();
+        if (empty($body['code'])) {
+            Response::error('VALIDATION_ERROR', 'Código 2FA é obrigatório', [], 422);
+            return;
+        }
+
+        $tfa = new \RobThree\Auth\TwoFactorAuth(new \App\Providers\ChillerlanQRCodeProvider(), 'AuthNexora');
+        if (!$tfa->verifyCode($user['two_factor_secret'], $body['code'])) {
+            Response::error('INVALID_CODE', 'Código 2FA inválido', [], 401);
+            return;
+        }
+
+        $data = $this->auth->issueTokenForUser($user);
+        Response::json($data);
+    }
+
+    public function verifyEmail(): void
+    {
+        $token = $_GET['token'] ?? '';
+        if (empty($token)) {
+            Response::error('MISSING_TOKEN', 'Token de verificação ausente', [], 400);
+            return;
+        }
+
+        try {
+            $claims = (new \App\Services\JwtService(
+                (require __DIR__ . '/../Config/env.php')['jwt']['secret'],
+                (require __DIR__ . '/../Config/env.php')['jwt']['issuer'],
+                (require __DIR__ . '/../Config/env.php')['jwt']['expires_in']
+            ))->decodeToken($token);
+
+            if (($claims['scope'] ?? '') !== 'email_verification') {
+                throw new \RuntimeException('Token inválido');
+            }
+
+            $userId = (int) ($claims['user_id'] ?? 0);
+            $user = $this->users->findById($userId);
+
+            if (!$user) {
+                throw new \RuntimeException('Usuário não encontrado');
+            }
+
+            if (!$user['is_email_verified']) {
+                $this->users->verifyEmail($userId);
+            }
+
+            Response::json(['message' => 'E-mail verificado com sucesso']);
+        } catch (\Throwable $e) {
+            Response::error('INVALID_TOKEN', 'Token inválido ou expirado', [], 401);
+        }
     }
 }

@@ -1,6 +1,6 @@
-FROM php:8.2-fpm
+FROM php:8.2-apache
 
-# Install system dependencies
+# Dependências do sistema
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -8,28 +8,54 @@ RUN apt-get update && apt-get install -y \
     libonig-dev \
     libxml2-dev \
     zip \
-    unzip
+    unzip \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# Clear cache
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+# Extensões PHP
+RUN docker-php-ext-install \
+    pdo_mysql \
+    mbstring \
+    exif \
+    pcntl \
+    bcmath \
+    gd
 
-# Install PHP extensions
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
-
-# Get latest Composer
+# Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Set working directory
+# Ativar módulos necessários do Apache
+RUN a2enmod rewrite headers
+
+# Diretório da aplicação
 WORKDIR /var/www
 
-# Copy existing application directory contents
+# Copiar aplicação
 COPY . /var/www
 
-# Install composer dependencies
-RUN composer install --no-interaction --optimize-autoloader --no-dev
+# DocumentRoot -> public
+ENV APACHE_DOCUMENT_ROOT=/var/www/public
 
-# Set permissions
-RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache 2>/dev/null || true
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' \
+    /etc/apache2/sites-available/*.conf \
+    /etc/apache2/apache2.conf \
+    /etc/apache2/conf-available/*.conf
 
-EXPOSE 9000
-CMD ["php-fpm"]
+# Instalar dependências PHP
+RUN composer install \
+    --no-interaction \
+    --prefer-dist \
+    --optimize-autoloader \
+    --no-dev
+
+# Permissões
+RUN chown -R www-data:www-data /var/www
+
+# Render usa HTTP
+EXPOSE 10000
+
+# Apache deve escutar na porta do Render
+RUN sed -i 's/Listen 80/Listen 10000/' /etc/apache2/ports.conf && \
+    sed -i 's/:80>/:10000>/g' /etc/apache2/sites-available/000-default.conf
+
+CMD ["apache2-foreground"]

@@ -32,7 +32,7 @@ final class UserRepository
 
     public function findById(int $id): ?array
     {
-        $stmt = $this->pdo->prepare('SELECT id, name, email, phone, birth_date, gender, cpf, address, belt, degree, last_graduation, academy_name, is_email_verified FROM users WHERE id = :id LIMIT 1');
+        $stmt = $this->pdo->prepare('SELECT id, name, email, phone, birth_date, gender, cpf, address, belt, degree, last_graduation, academy_name, is_email_verified, is_two_factor_enabled, failed_login_attempts FROM users WHERE id = :id LIMIT 1');
         $stmt->execute(['id' => $id]);
         $user = $stmt->fetch();
 
@@ -41,7 +41,7 @@ final class UserRepository
 
     public function create(array $data): array
     {
-        $stmt = $this->pdo->prepare('INSERT INTO users (name, email, password_hash, google_id, academy_name, phone, birth_date, gender, cpf, address, belt, degree, last_graduation) VALUES (:name, :email, :password_hash, :google_id, :academy_name, :phone, :birth_date, :gender, :cpf, :address, :belt, :degree, :last_graduation)');
+        $stmt = $this->pdo->prepare('INSERT INTO users (name, email, password_hash, google_id, academy_name, phone, birth_date, gender, cpf, address, belt, degree, last_graduation, created_by) VALUES (:name, :email, :password_hash, :google_id, :academy_name, :phone, :birth_date, :gender, :cpf, :address, :belt, :degree, :last_graduation, :created_by)');
         
         $stmt->execute([
             'name' => $data['name'],
@@ -57,6 +57,7 @@ final class UserRepository
             'belt' => $data['belt'] ?? null,
             'degree' => $data['degree'] ?? null,
             'last_graduation' => $data['last_graduation'] ?? null,
+            'created_by' => $data['created_by'] ?? null,
         ]);
 
         return [
@@ -72,6 +73,7 @@ final class UserRepository
             'degree' => $data['degree'] ?? null,
             'last_graduation' => $data['last_graduation'] ?? null,
             'academy_name' => $data['academy_name'] ?? null,
+            'created_by' => $data['created_by'] ?? null,
         ];
     }
 
@@ -106,12 +108,63 @@ final class UserRepository
             'belt' => $data['belt'] ?? null,
             'degree' => $data['degree'] ?? null,
             'last_graduation' => $data['last_graduation'] ?? null,
+            'updated_by' => $data['updated_by'] ?? null,
         ];
 
-        $sql = 'UPDATE users SET name = :name, academy_name = :academy_name, phone = :phone, birth_date = :birth_date, gender = :gender, cpf = :cpf, address = :address, belt = :belt, degree = :degree, last_graduation = :last_graduation WHERE id = :id';
+        $sql = 'UPDATE users SET name = :name, academy_name = :academy_name, phone = :phone, birth_date = :birth_date, gender = :gender, cpf = :cpf, address = :address, belt = :belt, degree = :degree, last_graduation = :last_graduation, updated_by = :updated_by WHERE id = :id';
         
         $stmt = $this->pdo->prepare($sql);
         $fields['id'] = $userId;
         $stmt->execute($fields);
+    }
+
+    public function updateTwoFactorSecret(int $userId, string $secret): void
+    {
+        $stmt = $this->pdo->prepare('UPDATE users SET two_factor_secret = :secret WHERE id = :id');
+        $stmt->execute([
+            'id' => $userId,
+            'secret' => $secret,
+        ]);
+    }
+
+    public function enableTwoFactor(int $userId, array $recoveryCodes): void
+    {
+        $stmt = $this->pdo->prepare('UPDATE users SET is_two_factor_enabled = 1, two_factor_recovery_codes = :codes WHERE id = :id');
+        $stmt->execute([
+            'id' => $userId,
+            'codes' => json_encode($recoveryCodes),
+        ]);
+    }
+
+    public function disableTwoFactor(int $userId): void
+    {
+        $stmt = $this->pdo->prepare('UPDATE users SET is_two_factor_enabled = 0, two_factor_secret = NULL, two_factor_recovery_codes = NULL WHERE id = :id');
+        $stmt->execute([
+            'id' => $userId,
+        ]);
+    }
+
+    public function verifyEmail(int $userId): void
+    {
+        $stmt = $this->pdo->prepare('UPDATE users SET is_email_verified = 1 WHERE id = :id');
+        $stmt->execute([
+            'id' => $userId,
+        ]);
+    }
+
+    public function incrementFailedLogin(int $userId): void
+    {
+        $stmt = $this->pdo->prepare('UPDATE users SET failed_login_attempts = failed_login_attempts + 1 WHERE id = :id');
+        $stmt->execute([
+            'id' => $userId,
+        ]);
+    }
+
+    public function resetFailedLogin(int $userId): void
+    {
+        $stmt = $this->pdo->prepare('UPDATE users SET failed_login_attempts = 0 WHERE id = :id');
+        $stmt->execute([
+            'id' => $userId,
+        ]);
     }
 }

@@ -7,7 +7,7 @@ namespace App\Docs;
 use OpenApi\Attributes as OA;
 
 #[OA\Info(title: "NexoraAuth", version: "1.4", description: "API de autenticação em PHP/MySQL")]
-#[OA\Server(url: "https://nexoraauth.free.nf", description: "Production (InfinityFree)")]
+
 #[OA\Server(url: "http://localhost:8080", description: "Local (Port 8080)")]
 #[OA\Server(url: "http://localhost:8081", description: "Local (Port 8081)")]
 #[OA\Tag(name: "Auth", description: "Fluxo de autenticação")]
@@ -17,6 +17,7 @@ use OpenApi\Attributes as OA;
     path: "/auth/signup",
     tags: ["Auth"],
     summary: "Cria novo usuário",
+    security: [["bearerAuth" => []]],
     requestBody: new OA\RequestBody(
         required: true,
         content: new OA\JsonContent(
@@ -40,6 +41,7 @@ use OpenApi\Attributes as OA;
     ),
     responses: [
         new OA\Response(response: 201, description: "Usuário criado"),
+        new OA\Response(response: 401, description: "Não autenticado"),
         new OA\Response(response: 422, description: "Dados inválidos"),
         new OA\Response(response: 409, description: "E-mail já cadastrado")
     ]
@@ -190,6 +192,126 @@ use OpenApi\Attributes as OA;
     responses: [
         new OA\Response(response: 200, description: "Autenticação bem sucedida"),
         new OA\Response(response: 401, description: "Autenticação falhou")
+    ]
+)]
+#[OA\Post(
+    path: "/auth/2fa/verify",
+    tags: ["Auth"],
+    summary: "Verifica o código 2FA e retorna o token de acesso final",
+    security: [["bearerAuth" => []]],
+    requestBody: new OA\RequestBody(
+        required: true,
+        content: new OA\JsonContent(
+            required: ["code"],
+            properties: [
+                new OA\Property(property: "code", type: "string", example: "123456")
+            ]
+        )
+    ),
+    responses: [
+        new OA\Response(response: 200, description: "Sucesso")
+    ]
+)]
+
+#[OA\Post(
+    path: "/2fa/generate",
+    tags: ["2FA"],
+    summary: "Gera uma nova chave secreta e QR Code para 2FA",
+    security: [["bearerAuth" => []]],
+    responses: [
+        new OA\Response(
+            response: 200,
+            description: "Sucesso",
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: "secret", type: "string", example: "JBSWY3DPEHPK3PXP"),
+                    new OA\Property(property: "qrCode", type: "string", example: "data:image/png;base64,..."),
+                    new OA\Property(property: "url", type: "string", example: "otpauth://totp/AuthNexora...")
+                ]
+            )
+        )
+    ]
+)]
+
+#[OA\Post(
+    path: "/2fa/enable",
+    tags: ["2FA"],
+    summary: "Ativa o 2FA",
+    security: [["bearerAuth" => []]],
+    requestBody: new OA\RequestBody(
+        required: true,
+        content: new OA\JsonContent(
+            required: ["secret", "code"],
+            properties: [
+                new OA\Property(property: "secret", type: "string", example: "JBSWY3DPEHPK3PXP"),
+                new OA\Property(property: "code", type: "string", example: "123456")
+            ]
+        )
+    ),
+    responses: [
+        new OA\Response(
+            response: 200,
+            description: "Ativado com sucesso",
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: "message", type: "string", example: "Autenticação de dois fatores ativada com sucesso."),
+                    new OA\Property(property: "recoveryCodes", type: "array", items: new OA\Items(type: "string"))
+                ]
+            )
+        )
+    ]
+)]
+
+#[OA\Post(
+    path: "/2fa/disable",
+    tags: ["2FA"],
+    summary: "Desativa o 2FA",
+    security: [["bearerAuth" => []]],
+    requestBody: new OA\RequestBody(
+        required: true,
+        content: new OA\JsonContent(
+            required: ["password"],
+            properties: [
+                new OA\Property(property: "password", type: "string", format: "password", example: "SenhaForte@123")
+            ]
+        )
+    ),
+    responses: [
+        new OA\Response(response: 200, description: "Desativado com sucesso"),
+        new OA\Response(response: 401, description: "Senha inválida")
+    ]
+)]
+#[OA\Get(
+    path: "/auth/verify-email",
+    tags: ["Auth"],
+    summary: "Verifica e-mail do usuário",
+    parameters: [
+        new OA\Parameter(name: "token", in: "query", required: true, description: "Token de verificação enviado por e-mail", schema: new OA\Schema(type: "string"))
+    ],
+    responses: [
+        new OA\Response(response: 200, description: "E-mail verificado com sucesso"),
+        new OA\Response(response: 400, description: "Token ausente"),
+        new OA\Response(response: 401, description: "Token inválido ou expirado")
+    ]
+)]
+
+#[OA\Post(
+    path: "/auth/refresh",
+    tags: ["Auth"],
+    summary: "Renova o Access Token usando um Refresh Token",
+    requestBody: new OA\RequestBody(
+        required: true,
+        content: new OA\JsonContent(
+            required: ["refreshToken"],
+            properties: [
+                new OA\Property(property: "refreshToken", type: "string", example: "seu_refresh_token_aqui")
+            ]
+        )
+    ),
+    responses: [
+        new OA\Response(response: 200, description: "Tokens renovados com sucesso"),
+        new OA\Response(response: 400, description: "Refresh token ausente"),
+        new OA\Response(response: 401, description: "Refresh token inválido ou expirado")
     ]
 )]
 final class OpenApi

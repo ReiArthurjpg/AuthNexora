@@ -12,6 +12,7 @@ use App\Helpers\Request;
 use App\Helpers\Response;
 use App\Middleware\AuthMiddleware;
 use App\Repositories\PasswordResetRepository;
+use App\Repositories\RefreshTokenRepository;
 use App\Repositories\UserRepository;
 use App\Services\AuthService;
 use App\Services\EmailService;
@@ -20,6 +21,7 @@ use App\Services\PasswordResetService;
 use App\Services\RateLimitService;
 use App\Services\GoogleAuthService;
 use App\Controllers\GoogleAuthController;
+use App\Controllers\TwoFactorAuthController;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
@@ -30,12 +32,11 @@ $env = require __DIR__ . '/../src/Config/env.php';
 
 $requestOrigin = $_SERVER['HTTP_ORIGIN'] ?? '';
 
-// Permite localhost e domínios .vercel.app
 if ($requestOrigin !== '') {
-    if (preg_match('/^https?:\/\/(localhost|.*\.vercel\.app)(:\d+)?$/', $requestOrigin)) {
-        header("Access-Control-Allow-Origin: {$requestOrigin}");
-        header('Vary: Origin');
-    }
+    header("Access-Control-Allow-Origin: {$requestOrigin}");
+    header('Vary: Origin');
+} else {
+    header("Access-Control-Allow-Origin: *");
 }
 
 header('Access-Control-Allow-Methods: GET,POST,PUT,OPTIONS');
@@ -50,12 +51,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 $pdo = Database::connection();
 $userRepo = new UserRepository($pdo);
 $resetRepo = new PasswordResetRepository($pdo);
+$refreshTokenRepo = new RefreshTokenRepository($pdo);
 $jwt = new JwtService($env['jwt']['secret'], $env['jwt']['issuer'], $env['jwt']['expires_in']);
 $rateLimit = new RateLimitService($env['security']['rate_limit_max_attempts'], $env['security']['rate_limit_window_seconds']);
 
-$authController = new AuthController(new AuthService($userRepo, $jwt), $userRepo, $rateLimit);
+$emailService = new EmailService($env['mail']);
+$authController = new AuthController(new AuthService($userRepo, $jwt, $emailService, $env, $refreshTokenRepo), $userRepo, $rateLimit);
 $passwordController = new PasswordController(
-    new PasswordResetService($userRepo, $resetRepo, new EmailService($env['mail']), $env),
+    new PasswordResetService($userRepo, $resetRepo, $emailService, $env),
     $rateLimit
 );
 $googleAuthController = new GoogleAuthController(
@@ -64,6 +67,7 @@ $googleAuthController = new GoogleAuthController(
     $jwt,
     $env
 );
+$twoFactorAuthController = new TwoFactorAuthController($userRepo);
 $authMiddleware = new AuthMiddleware($jwt);
 
 $method = $_SERVER['REQUEST_METHOD'];
@@ -139,7 +143,8 @@ try {
         HTML;
         exit;
     } elseif ($method === 'POST' && $path === '/auth/signup') {
-        $authController->signup();
+        $claims = $authMiddleware->authenticate(Request::bearerToken());
+        $authController->signup($claims);
     } elseif ($method === 'POST' && $path === '/auth/login') {
         $authController->login();
     } elseif ($method === 'GET' && $path === '/auth/me') {
@@ -160,6 +165,22 @@ try {
         $passwordController->resetPassword();
     } elseif ($method === 'GET' && $path === '/auth/reset-password/validate') {
         $passwordController->validateResetToken();
+    } elseif ($method === 'GET' && $path === '/auth/verify-email') {
+        $authController->verifyEmail();
+    } elseif ($method === 'POST' && $path === '/auth/refresh') {
+        $authController->refresh();
+    } elseif ($method === 'POST' && $path === '/auth/2fa/verify') {
+        $claims = $authMiddleware->authenticate(Request::bearerToken());
+        $authController->verify2fa($claims);
+    } elseif ($method === 'POST' && $path === '/2fa/generate') {
+        $claims = $authMiddleware->authenticate(Request::bearerToken());
+        $twoFactorAuthController->generate($claims);
+    } elseif ($method === 'POST' && $path === '/2fa/enable') {
+        $claims = $authMiddleware->authenticate(Request::bearerToken());
+        $twoFactorAuthController->enable($claims);
+    } elseif ($method === 'POST' && $path === '/2fa/disable') {
+        $claims = $authMiddleware->authenticate(Request::bearerToken());
+        $twoFactorAuthController->disable($claims);
     } else {
         Response::error('NOT_FOUND', 'Endpoint não encontrado', [], 404);
     }
