@@ -8,6 +8,7 @@ use OpenApi\Attributes as OA;
 
 #[OA\Info(title: "NexoraAuth", version: "1.4", description: "API de autenticação em PHP/MySQL")]
 
+#[OA\Server(url: "https://authnexora-api.onrender.com", description: "Production (Render)")]
 #[OA\Server(url: "http://localhost:8080", description: "Local (Port 8080)")]
 #[OA\Server(url: "http://localhost:8081", description: "Local (Port 8081)")]
 #[OA\Tag(name: "Auth", description: "Fluxo de autenticação")]
