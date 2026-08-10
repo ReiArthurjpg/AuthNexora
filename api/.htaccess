@@ -1,6 +1,11 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
+    # ── CRÍTICO: Repassa o header Authorization ao PHP ──────────────
+    # O Apache descarta Authorization por padrão; esta regra o preserva.
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
     # Tenta forçar CORS via Header (se o host permitir)
     Header set Access-Control-Allow-Origin "https://v0-app-nexora-bjj.vercel.app"
     Header set Access-Control-Allow-Methods "GET, POST, OPTIONS, PUT, DELETE"
