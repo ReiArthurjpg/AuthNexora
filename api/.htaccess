@@ -6,13 +6,8 @@
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
-    # Tenta forçar CORS via Header (se o host permitir)
-    Header set Access-Control-Allow-Origin "https://v0-app-nexora-bjj.vercel.app"
-    Header set Access-Control-Allow-Methods "GET, POST, OPTIONS, PUT, DELETE"
-    Header set Access-Control-Allow-Headers "Content-Type, Authorization"
-    Header set Access-Control-Allow-Credentials "true"
-
     # Permite que requisições OPTIONS passem para o PHP
+    # (o PHP em index.php trata CORS dinamicamente — não fixar origem aqui)
     RewriteCond %{REQUEST_METHOD} OPTIONS
     RewriteRule ^(.*)$ public/index.php [L,QSA]
 
@@ -24,3 +19,4 @@
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteRule ^(.*)$ public/index.php/$1 [L,QSA]
 </IfModule>
+
