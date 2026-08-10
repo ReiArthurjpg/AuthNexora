@@ -30,16 +30,24 @@ $dotenv->safeLoad();
 
 $env = require __DIR__ . '/../src/Config/env.php';
 
+// ── CORS: Origens permitidas ─────────────────────────────────────
+$allowedOrigins = [
+    'https://v0-app-nexora-bjj.vercel.app', // produção Vercel
+    'http://localhost:3000',                 // desenvolvimento local
+    'http://localhost:3001',
+    'http://127.0.0.1:3000',
+];
+
 $requestOrigin = $_SERVER['HTTP_ORIGIN'] ?? '';
 
-if ($requestOrigin !== '') {
+if (in_array($requestOrigin, $allowedOrigins, true)) {
     header("Access-Control-Allow-Origin: {$requestOrigin}");
-    header('Vary: Origin');
 } else {
-    header("Access-Control-Allow-Origin: *");
+    header('Access-Control-Allow-Origin: https://v0-app-nexora-bjj.vercel.app');
 }
 
-header('Access-Control-Allow-Methods: GET,POST,PUT,OPTIONS');
+header('Vary: Origin');
+header('Access-Control-Allow-Methods: GET,POST,PUT,DELETE,OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
 header('Access-Control-Allow-Credentials: true');
 
